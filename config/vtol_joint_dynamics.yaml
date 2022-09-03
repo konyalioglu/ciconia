@@ -1,0 +1,6 @@
+gazebo_ros_control:
+    pid_gains:
+        motor2fwprop:
+            p: 0.6
+            i: 0.0001
+            d: 0.0001

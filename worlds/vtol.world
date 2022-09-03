@@ -1,0 +1,35 @@
+<?xml version="1.0" ?>
+<sdf version="1.4">
+
+  <world name="default">
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    
+    <scene>
+      <shadows>false</shadows>
+    </scene>
+
+
+    <physics type='ode'>
+      <max_step_size>0.001000</max_step_size>
+      <real_time_factor>1.000000</real_time_factor>
+      <real_time_update_rate>250.000000</real_time_update_rate>
+      <gravity>0.000000 0.000000 0</gravity>
+    </physics>
+    
+    <include>
+      <uri>model://qrkod</uri>
+      <pose>0 0 0.01 0 0 0</pose>
+    </include>
+    
+
+    
+    
+  </world>
+</sdf>
