@@ -1,0 +1,34 @@
+#Position Config
+
+lattitude_ref: 45
+longitude_ref: 12
+
+lattitude_cov: 1
+longitude_cov: 1
+
+position_x_cov: 1
+position_y_cov: 1
+position_z_cov: 0.5
+
+#Velocity Config
+velocity_x_cov: 0.2
+velocity_y_cov: 0.2
+velocity_z_cov: 0.1
+
+# Euler Angles Config
+euler_x_cov: 0.01
+euler_y_cov: 0.01
+euler_z_cov: 0.01
+
+# Accelerometer Config
+accel_x_cov: 0.01
+accel_y_cov: 0.01
+accel_z_cov: 0.01
+
+# Gyro Config
+rate_x_cov: 0.01
+rate_y_cov: 0.01
+rate_z_cov: 0.01
+
+
+

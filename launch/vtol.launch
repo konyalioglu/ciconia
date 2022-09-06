@@ -20,21 +20,42 @@
   </include>
 
 
+
+  <rosparam command="load" file="$(find ciconia)/config/xsensor_model_config.yaml"/>
+
+
+
   <group ns="ciconia">
 		
     <param name="robot_description" command="$(find xacro)xacro '$(find ciconia)/urdf/vtol.xacro'" />
+	
 		
     <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" args="-param robot_description -urdf -model ciconia" />
     
-		
+    
     <rosparam file="$(find ciconia)/config/vtol_joint_dynamics.yaml" command="load"/>
 
+
     <rosparam file="$(find ciconia)/config/vtol.yaml" command="load" ns="/ciconia" />
-	  <node name="control_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="--namespace=/ciconia joint_state_controller joint_controlDeflection_controller" />
+    
+    
+    <node name="control_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="--namespace=/ciconia 		joint_state_controller joint_controlDeflection_controller" />
+
+
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">		
       <param name="publish_frequency" type="double" value="50.0" />
     </node>
+    
+    
+    <node name="physics" pkg="ciconia" type="physics.py" output="screen"/>
+    
+    
+    <node name="xsens_sensor_model" pkg="ciconia" type="xsensSensorModel.py" output="screen"/>
+  
+
   </group>
+   
+
 
 
 </launch>

@@ -8,22 +8,35 @@ project(ciconia)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  #rospy
+  roscpp
+  rospy
   std_msgs
+  message_generation
+  xsens_msgs
 )
 
+
 catkin_package(
-  CATKIN_DEPENDS rospy std_msgs
+  CATKIN_DEPENDS rospy std_msgs message_runtime xsens_msgs
 )
+
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
 
+add_message_files(
+  FILES
+  rc_messages.msg
+)
+
+
 catkin_install_python(PROGRAMS
-  src/control.py 
-  src/physics.py
+  scripts/control.py 
+  scripts/physics.py
+  scripts/SensorModels/xsensSensorModel.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
 
