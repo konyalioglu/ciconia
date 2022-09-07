@@ -176,6 +176,7 @@
     </plugin>
   </gazebo>
 
+
   <gazebo>
     <plugin name="gazebo_ros_force" filename="libgazebo_ros_force.so">
       <alwaysOn>true</alwaysOn>
@@ -183,22 +184,6 @@
       <updateRate>250</updateRate>
       <bodyName>body</bodyName>
       <topicName>ForcesAndMoments</topicName>
-    </plugin>
-  </gazebo>
-
-  
-  <gazebo>
-    <plugin name="imu_plugin" filename="libgazebo_ros_imu.so">
-      <alwaysOn>true</alwaysOn>
-      <bodyName>body</bodyName>
-      <topicName>imu</topicName>
-      <serviceName>imu_service</serviceName>
-      <gaussianNoise>0.0</gaussianNoise>
-      <updateRate>20.0</updateRate>
-      <gaussianNoise>0.0</gaussianNoise>
-      <xyzOffset>0 0 0</xyzOffset>
-      <rpyOffset>0 0 0</rpyOffset>
-      <initialOrientationAsReference>true</initialOrientationAsReference>
     </plugin>
   </gazebo>
   
@@ -212,21 +197,6 @@
       <motor5>motor2fwprop</motor5>
     </plugin>  
   </gazebo> 
-  
-  <gazebo>
-    <plugin name="gps_plugin" filename="libhector_gazebo_ros_gps.so">
-      <robotNamespace>/ciconia</robotNamespace>
-      <updateRate>20</updateRate>
-      <bodyName>body</bodyName>
-      <frameId>map</frameId>
-      <topicName>gps/fix</topicName>
-      <velocityTopicName>gps/fix_velocity</velocityTopicName>
-      <drift>0.0 0.0 0.0</drift>
-      <gaussiannoise>0.0 0.0 0.0</gaussiannoise>
-      <velocitydrift>0 0 0</velocitydrift>
-      <velocitygaussiannoise>0.0 0.0 0.0</velocitygaussiannoise>
-    </plugin>
-  </gazebo>
   
   
     <!-- camera -->

@@ -35,7 +35,12 @@ add_message_files(
 catkin_install_python(PROGRAMS
   scripts/control.py 
   scripts/physics.py
+  scripts/processImage.py
+  scripts/utils.py
   scripts/SensorModels/xsensSensorModel.py
+  scripts/Controllers/model_predictive_controller.py 
+  scripts/Controllers/lqr.py 
+  scripts/Controllers/pid.py 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

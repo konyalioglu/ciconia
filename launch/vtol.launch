@@ -47,6 +47,9 @@
     </node>
     
     
+    <node name="control" pkg="ciconia" type="control.py" output="screen"/>
+    
+    
     <node name="physics" pkg="ciconia" type="physics.py" output="screen"/>
     
     

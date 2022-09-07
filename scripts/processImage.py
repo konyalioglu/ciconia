@@ -36,11 +36,6 @@ class readImage:
         self.ori = np.array([[],[],[]])
 
 
-
-    #------------------------------------------------------------------------------
-    #------- ROTATIONS https://www.learnopencv.com/rotation-matrix-to-euler-angles/
-    #------------------------------------------------------------------------------
-    # Checks if a matrix is a valid rotation matrix.
     def __isRotationMatrix(self, R):
         Rt = np.transpose(R)
         shouldBeIdentity = np.dot(Rt, R)
@@ -48,10 +43,7 @@ class readImage:
         n = np.linalg.norm(I - shouldBeIdentity)
         return n < 1e-6
     
-    
-    # Calculates rotation matrix to euler angles
-    # The result is the same as MATLAB except the order
-    # of the euler angles ( x and z are swapped ).
+
     def __rotationMatrixToEulerAngles(self, R):
         assert (self.__isRotationMatrix(R))
     
