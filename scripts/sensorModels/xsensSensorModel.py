@@ -3,6 +3,8 @@
 import numpy as np
 from numpy import nan
 import rospy, os, sys, time, math
+import math
+
 from geometry_msgs.msg import Pose, Vector3Stamped, Wrench
 from sensor_msgs.msg import JointState, Imu, NavSatFix
 from gazebo_msgs.msg import ModelStates, LinkStates
@@ -91,9 +93,30 @@ class xsensModel:
 
         ##Ros Initialization
         rospy.init_node(self._node_name)
-        self.pub_force_moment = rospy.Publisher('/ciconia/ForcesAndMoments', Wrench, queue_size=5)
+
         rospy.Subscriber("/gazebo/link_states", LinkStates, self.pose_handler)
-        self._timer = rospy.Timer(rospy.Duration(0.05), self._accelerometer_handler)
+        
+        self._accelerometer_time = rospy.Timer(rospy.Duration(1/self.accel_rate), self._accelerometer_handler)
+        self._gyroscopte_timer = rospy.Timer(rospy.Duration(1/self.accel_rate), self._gyroscope_handler)
+        self._magnetometer_timer = rospy.Timer(rospy.Duration(1/self.accel_rate), self._magnetometer_handler)
+        self._barometer_timer = rospy.Timer(rospy.Duration(1/self.accel_rate), self._barometer_handler)
+        self._gps_timer = rospy.Timer(rospy.Duration(1/self.accel_rate), self._gps_handler)
+        
+        self._filtered_vel_timer = rospy.Timer(rospy.Duration(1/self.accel_rate), self._filtered_vel_handler)
+        self._filtered_pos_timer = rospy.Timer(rospy.Duration(1/self.accel_rate), self._filtered_pos_handler)
+        self._filtered_attitude_timer = rospy.Timer(rospy.Duration(1/self.accel_rate), self._filtered_attitude_handler)
+        
+        self._accelerometer_pub = rospy.Publisher(self._node_name + '/ForcesAndMoments', Wrench, queue_size=5)
+        self._gyroscopte_pub = rospy.Publisher(self._node_name + '/ForcesAndMoments', Wrench, queue_size=5)
+        self._magnetometer_pub = rospy.Publisher(self._node_name + '/ForcesAndMoments', Wrench, queue_size=5)
+        self._barometer_pub = rospy.Publisher(self._node_name + '/ForcesAndMoments', Wrench, queue_size=5)
+        self._gps_pub = rospy.Publisher(self._node_name + '/ForcesAndMoments', Wrench, queue_size=5)
+        
+        self._filtered_vel_pub = rospy.Publisher(self._node_name + '/ForcesAndMoments', Wrench, queue_size=5)
+        self._filtered_pos_pub = rospy.Publisher(self._node_name + '/ForcesAndMoments', Wrench, queue_size=5)
+        self._filtered_attitude_pub = rospy.Publisher(self._node_name + '/ForcesAndMoments', Wrench, queue_size=5)
+
+
 
 
     def get_param(self, param_name, default):
@@ -109,8 +132,7 @@ class xsensModel:
 
     def initialize_model(self):
         #Main Node Rate
-        self.rate = self.get_param('/x_sens_node_rate', self.rate)
-        
+        self.rate = self.get_param('/x_sens_node_rate', self.rate)       
         
         # GPS Config
         self.lattitude_ref = self.get_param('/lattitude_ref', self.lattitude_ref)
@@ -119,20 +141,17 @@ class xsensModel:
         self.longitude_cov = self.get_param('/longitude_cov', self.longitude_cov)       
         self.gps_rate = self.get_param('/gps_rate', self.gps_rate)
 
-
         # Filtered Position Config
         self.position_x_cov = self.get_param('/position_x_cov', self.position_x_cov)
         self.position_y_cov = self.get_param('/position_y_cov', self.position_y_cov)
         self.position_z_cov = self.get_param('/position_z_cov', self.position_z_cov)
         self.pos_est_rate = self.get_param('/position_z_cov', self.pos_est_rate)
-        
-        
+             
         # Filtered Velocity Config
         self.velocity_x_cov = self.get_param('/velocity_x_cov', self.velocity_x_cov)
         self.velocity_y_cov = self.get_param('/velocity_y_cov', self.velocity_y_cov)
         self.velocity_z_cov = self.get_param('/velocity_z_cov', self.velocity_z_cov)
         self.vel_est_rate   = self.get_param('/velocity_rate', self.vel_est_rate)
-
 
         # Filtered Attitude Data
         self.filtered_euler_x_cov = self.get_param('/filtered_euler_x_cov', self.filtered_euler_x_cov)
@@ -145,7 +164,6 @@ class xsensModel:
         self.filtered_gyro_y_cov  = self.get_param('/filtered_gyro_y_cov', self.filtered_gyro_y_cov)
         self.filtered_gyro_z_cov  = self.get_param('/filtered_gyro_z_cov', self.filtered_gyro_z_cov)
         self.attitude_filter_rate = self.get_param('/attitude_filter_rate', self.attitude_filter_rate)
-
 
         # Accel Config
         self.accel_x_cov = self.get_param('/accel_x_cov', self.accel_x_cov)
@@ -185,29 +203,51 @@ class xsensModel:
 
         ori_vector_ned = np.array([[self.phi_ned], [self.theta_ned], [self.psi_ned]])
         vel_vector_ned = np.array([[data.twist[body_index].linear.x],[-data.twist[body_index].linear.y],[-data.twist[body_index].linear.z]])
-        vel_vector = earth2body_transformation(ori_vector, vel_vector)
+        vel_vector = earth2body_transformation(ori_vector_ned, vel_vector_ned)
 
         self.u_ned = vel_vector[0]
-        self.v_ned = -vel_vector[1]
-        self.w_ned = -vel_vector[2]
+        self.v_ned = vel_vector[1]
+        self.w_ned = vel_vector[2]
 
-        rates = np.array([[data.twist[body_index].angular.x],[data.twist[body_index].angular.y],[data.twist[body_index].angular.z]])
-        rates = earth2body_transformation(ori_vector, rates)
+        euler_rates = np.array([[data.twist[body_index].angular.x],[-data.twist[body_index].angular.y],[-data.twist[body_index].angular.z]])
+        rates = earth2body_transformation(ori_vector_ned, euler_rates)
 
         self.p_ned = rates[0,0]
-        self.q_ned = -rates[1,0]
-        self.r_ned = -rates[2,0]
+        self.q_ned = rates[1,0]
+        self.r_ned = rates[2,0]
 
-        #wind axis parameters, Wind Velocity, Angle of Attack, Side slip angle
-        self.Vt    = math.sqrt(self.u_ned**2 + self.v_ned**2 + self.w_ned**2)
-        self.alpha = math.atan(self.w_ned/self.u_ned)
-        self.beta  = math.asin(self.v_ned/self.Vt)
-
-        self.mach = self.Vt / self.speedofsound
         return
         
         
-    def _accelerometer_handler(self, data):
+    def _accelerometer_handler(self):
+        return
+        
+        
+    def _gyroscope_handler(self):
+        return
+        
+        
+    def _magnetometer_handler(self):
+        return
+        
+        
+    def _gps_handler(self):
+        return
+        
+        
+    def _filtered_vel_handler(self):
+        return
+        
+        
+    def _filtered_pos_handler(self):
+        return
+        
+        
+    def _filtered_attitude_handler(self):
+        return
+        
+        
+    def _barometer_handler(self):
         return
 
 
@@ -222,8 +262,9 @@ class xsensModel:
 if __name__ == '__main__':
 
     vtol = xsensModel()
-
-    vtol.loop()
+    rospy.loginfo('XSENS SENSOR MODEL HAD BEEN ACTIVATED')
+    
+    rospy.spin()
 
 
 
