@@ -1,3 +1,5 @@
+#! /usr/bin/python3
+
 import time
 import numpy as np
 from numpy import nan
