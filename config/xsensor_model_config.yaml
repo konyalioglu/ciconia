@@ -6,7 +6,7 @@ longitude_ref: 12
 
 lattitude_cov: 1
 longitude_cov: 1
-gps_rate: 3
+gnss_rate: 4
 
 #Position Config
 position_x_cov: 1
@@ -24,35 +24,40 @@ velocity_rate: 10
 filtered_euler_x_cov: 0.01
 filtered_euler_y_cov: 0.01
 filtered_euler_z_cov: 0.01
-filtered_accel_x_cov: 0.01
-filtered_accel_y_cov: 0.01
-filtered_accel_z_cov: 0.01
+free_accel_x_cov: 0.01
+free_accel_y_cov: 0.01
+free_accel_z_cov: 0.01
 filtered_gyro_x_cov: 0.01
 filtered_gyro_y_cov: 0.01
 filtered_gyro_z_cov: 0.01
-attitude_filter_rate: 100
+imu_filter_rate: 100
 
 # Accelerometer Config
 accel_x_cov: 0.01
 accel_y_cov: 0.01
 accel_z_cov: 0.01
-accelerometer_raw_rate: 200
+accelerometer_raw_rate: 100
 
 # Gyro Config
 gyro_x_cov: 0.01
 gyro_y_cov: 0.01
 gyro_z_cov: 0.01
-gyroscope_raw_rate: 200
+gyroscope_raw_rate: 100
 
 # Magnetometer Config
 mag_x_cov: 0.01
 mag_y_cov: 0.01
 mag_z_cov: 0.01
-magnetometer_raw_rate: 20
+magnetometer_raw_rate: 100
 
 # Barometer Config
 pressure_cov: 0.01
-barometer_raw_rate: 20
+barometer_raw_rate: 25
+
+# Temperature Config
+temperature_cov: 0.01
+temperature_raw_rate: 25
+
 
 
 

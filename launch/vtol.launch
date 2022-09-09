@@ -19,11 +19,11 @@
   </include>
 
 
-  <arg name="x_sens_node_rate" value="200.0"/>  
+  <arg name="x_sens_node_rate" value="100.0"/>  
   <param name="x_sens_node_rate" type="double" value="$(arg x_sens_node_rate)" />
   <rosparam command="load" file="$(find ciconia)/config/xsensor_model_config.yaml"/>
   
-  <arg name="pitot_tube_sensor_node_rate" value="200.0"/>  
+  <arg name="pitot_tube_sensor_node_rate" value="20.0"/>  
   <param name="pitot_tube_sensor_node_rate" type="double" value="$(arg pitot_tube_sensor_node_rate)" />
   <rosparam command="load" file="$(find ciconia)/config/pitot_tube_sensor_config.yaml"/>
 
@@ -42,21 +42,23 @@
     <rosparam file="$(find ciconia)/config/vtol.yaml" command="load" ns="/ciconia" />
     
     
-    <node name="control_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="--namespace=/ciconia 		joint_state_controller joint_controlDeflection_controller" />
+    <node name="control_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="--namespace=/ciconia joint_state_controller joint_controlDeflection_controller" />
 
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">		
       <param name="publish_frequency" type="double" value="50.0" />
     </node>
     
+    <!--
     <node name="x_sens_gazebo_pose_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">		
       <param name="publish_frequency" type="double" value="$(arg x_sens_node_rate)" />
     </node>
     
+    
     <node name="pitot_tube_gazebo_pose_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">		
       <param name="publish_frequency" type="double" value="$(arg pitot_tube_sensor_node_rate)" />
     </node>
-    
+    -->
     
     <node name="control" pkg="ciconia" type="control.py" output="screen"/>
     
