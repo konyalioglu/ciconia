@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   message_generation
   xsens_msgs
+  gazebo_msgs
 )
 find_package(gazebo REQUIRED)
 
@@ -18,6 +19,7 @@ catkin_package(CATKIN_DEPENDS
   std_msgs
   message_runtime
   xsens_msgs
+  gazebo_msgs
 )
 
 
@@ -38,6 +40,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 add_library(joint_plugin SHARED plugins/src/joint_plugin.cpp)
 target_link_libraries(joint_plugin ${GAZEBO_LIBRARIES})
 
+add_library(gazeboStatePublisherPlugin SHARED plugins/src/gazeboStatePublisherPlugin.cpp)
+target_link_libraries(gazeboStatePublisherPlugin ${GAZEBO_LIBRARIES})
 
 
 

@@ -107,7 +107,7 @@ namespace gazebo
     public: void OnRosMsg(const std_msgs::Float64MultiArray::ConstPtr& msg)
     {
       this->SetVelocity(msg);
-      rosPub.publish(msg);
+      this->rosPub.publish(msg);
     }
     
 

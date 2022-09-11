@@ -46,10 +46,10 @@
 
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">		
-      <param name="publish_frequency" type="double" value="50.0" />
+      <param name="publish_frequency" type="double" value="250.0" />
     </node>
     
-    <!--
+    <!--    
     <node name="x_sens_gazebo_pose_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">		
       <param name="publish_frequency" type="double" value="$(arg x_sens_node_rate)" />
     </node>
