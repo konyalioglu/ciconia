@@ -114,6 +114,22 @@ namespace gazebo
 
     public: void callback(const ros::TimerEvent& event)
     {
+      ignition::math::Pose3d Pose = this->link->WorldPose();   
+      ignition::math::Vector3d Pos = Pose.Pos();
+      ignition::math::Quaterniond Quat = Pose.Rot();
+
+      this->robotQuaternion.w  = Quat.W();
+      this->robotQuaternion.x  = Quat.X();
+      this->robotQuaternion.y  = Quat.Y();
+      this->robotQuaternion.z  = Quat.Z();
+      this->rosPubRobotQuaternion.publish(this->robotQuaternion);
+      
+      this->robotPosition.x  = Pos.X();
+      this->robotPosition.y  = Pos.Y();
+      this->robotPosition.z  = Pos.Z(); 
+      this->rosPubRobotPosition.publish(this->robotPosition);
+      
+      
       ignition::math::Vector3d AngularVel = this->link->WorldAngularVel();      
 
       this->robotAngularVel.x  = AngularVel.X();
@@ -136,24 +152,7 @@ namespace gazebo
       this->robotLinearVel.y  = LinearVel.Y();
       this->robotLinearVel.z  = LinearVel.Z();
       this->rosPubLinearVel.publish(this->robotLinearVel);
-      
-      
-      ignition::math::Pose3d Pose = this->link->WorldPose();   
-      ignition::math::Vector3d Pos = Pose.Pos();
-      ignition::math::Quaterniond Quat = Pose.Rot();
-      
-      this->robotPosition.x  = Pos.X();
-      this->robotPosition.y  = Pos.Y();
-      this->robotPosition.z  = Pos.Z(); 
-      this->rosPubRobotPosition.publish(this->robotPosition);
-      
-      this->robotQuaternion.w  = Quat.W();
-      this->robotQuaternion.x  = Quat.X();
-      this->robotQuaternion.y  = Quat.Y();
-      this->robotQuaternion.z  = Quat.Z();
-      this->rosPubRobotQuaternion.publish(this->robotQuaternion);
 
-      this->PubStates(); 
     }
     
 

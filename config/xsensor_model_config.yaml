@@ -37,6 +37,7 @@ accel_x_cov: 0.01
 accel_y_cov: 0.01
 accel_z_cov: 0.01
 accelerometer_raw_rate: 100
+gravity: 9.8065
 
 # Gyro Config
 gyro_x_cov: 0.01
@@ -48,6 +49,10 @@ gyroscope_raw_rate: 100
 mag_x_cov: 0.01
 mag_y_cov: 0.01
 mag_z_cov: 0.01
+magnetometer_magnitude: 25.0
+magnetometer_inclination: 58.908   #in degrees
+magnetometer_declination: 5.959    #in degrees
+magnetometer_reference_heading: 0  #in degrees
 magnetometer_raw_rate: 100
 
 # Barometer Config
