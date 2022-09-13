@@ -119,4 +119,20 @@ def quaternion_to_gravity(qx, qy, qz, qw):
     y = 2 * (qw * qx + qy * qz)
     z = qw * qw - qx * qx - qy * qy + qz * qz
     return x, y, z
+
+
+def earth_radiuses(ref_latitude):
+    ##
+    ## https://github.com/tu-darmstadt-ros-pkg/hector_gazebo/blob/melodic-devel/hector_gazebo_plugins/src/gazebo_ros_gps.cpp
+    ##
+    
+    equatorial_radius = 6378137.0
+    flattening = 1.0/298.257223563
+    excentrity = 2*flattening - flattening*flattening
+    tmp = 1.0 / (1.0 - excentrity * np.sin(ref_latitude * np.pi/180.0) * np.sin(ref_latitude * np.pi/180.0))
+    prime_vertical_radius = equatorial_radius * np.sqrt(tmp)
+
+    radius_north = prime_vertical_radius * (1 - excentrity) * tmp
+    radius_east  = prime_vertical_radius * np.cos(ref_latitude * np.pi/180.0)
+    return radius_north, radius_east
      

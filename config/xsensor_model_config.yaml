@@ -1,54 +1,56 @@
 
 
 #GPS RAW
-lattitude_ref: 45
+latitude_ref: 45
 longitude_ref: 12
-
-lattitude_cov: 1
-longitude_cov: 1
+altitude_ref: 0
+gnss_pos_x_var: 1
+gnss_pos_y_var: 1
+gnss_pos_z_var: 0.5
 gnss_rate: 4
 
 #Position Config
-position_x_cov: 1
-position_y_cov: 1
-position_z_cov: 0.5
+filter_pos_x_var: 1
+filter_pos_y_var: 1
+filter_pos_z_var: 0.5
 position_rate: 10
 
 #Velocity Config
-velocity_x_cov: 0.2
-velocity_y_cov: 0.2
-velocity_z_cov: 0.1
+velocity_x_var: 0.2
+velocity_y_var: 0.2
+velocity_z_var: 0.1
 velocity_rate: 10
 
 # Euler Angles Config
-filtered_euler_x_cov: 0.01
-filtered_euler_y_cov: 0.01
-filtered_euler_z_cov: 0.01
-free_accel_x_cov: 0.01
-free_accel_y_cov: 0.01
-free_accel_z_cov: 0.01
-filtered_gyro_x_cov: 0.01
-filtered_gyro_y_cov: 0.01
-filtered_gyro_z_cov: 0.01
+filtered_euler_x_var: 0.01
+filtered_euler_y_var: 0.01
+filtered_euler_z_var: 0.01
+free_accel_x_var: 0.01
+free_accel_y_var: 0.01
+free_accel_z_var: 0.01
+acc_filter_rate: 100
+filtered_gyro_x_var: 0.01
+filtered_gyro_y_var: 0.01
+filtered_gyro_z_var: 0.01
 imu_filter_rate: 100
 
 # Accelerometer Config
-accel_x_cov: 0.01
-accel_y_cov: 0.01
-accel_z_cov: 0.01
+accel_x_var: 0.01
+accel_y_var: 0.01
+accel_z_var: 0.01
 accelerometer_raw_rate: 100
 gravity: 9.8065
 
 # Gyro Config
-gyro_x_cov: 0.01
-gyro_y_cov: 0.01
-gyro_z_cov: 0.01
+gyro_x_var: 0.01
+gyro_y_var: 0.01
+gyro_z_var: 0.01
 gyroscope_raw_rate: 100
 
 # Magnetometer Config
-mag_x_cov: 0.01
-mag_y_cov: 0.01
-mag_z_cov: 0.01
+mag_x_var: 0.01
+mag_y_var: 0.01
+mag_z_var: 0.01
 magnetometer_magnitude: 25.0
 magnetometer_inclination: 58.908   #in degrees
 magnetometer_declination: 5.959    #in degrees
@@ -56,11 +58,11 @@ magnetometer_reference_heading: 0  #in degrees
 magnetometer_raw_rate: 100
 
 # Barometer Config
-pressure_cov: 0.01
+pressure_var: 0.01
 barometer_raw_rate: 25
 
 # Temperature Config
-temperature_cov: 0.01
+temperature_var: 0.01
 temperature_raw_rate: 25
 
 

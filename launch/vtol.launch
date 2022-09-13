@@ -23,7 +23,7 @@
   <param name="x_sens_node_rate" type="double" value="$(arg x_sens_node_rate)" />
   <rosparam command="load" file="$(find ciconia)/config/xsensor_model_config.yaml"/>
   
-  <arg name="pitot_tube_sensor_node_rate" value="20.0"/>  
+  <arg name="pitot_tube_sensor_node_rate" value="40.0"/>  
   <param name="pitot_tube_sensor_node_rate" type="double" value="$(arg pitot_tube_sensor_node_rate)" />
   <rosparam command="load" file="$(find ciconia)/config/pitot_tube_sensor_config.yaml"/>
 
@@ -67,7 +67,10 @@
     
     
     <node name="xsens_sensor_model" pkg="ciconia" type="xsensSensorModel.py" output="screen"/>
-  
+    
+    
+    <node name="differential_pressure_sensor" pkg="ciconia" type="differentialPressureSensorModel.py" output="screen"/>  
+
 
   </group>
 </launch>
