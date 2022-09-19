@@ -8,7 +8,7 @@ from sensor_msgs.msg import JointState, Imu, NavSatFix, Image
 from gazebo_msgs.msg import ModelStates, LinkStates
 from rosgraph_msgs.msg import Clock
 from std_msgs.msg import Float64MultiArray, Float32, String 
-
+from ciconia.msg import quadrotorControl, transitionControl, flightControl
 
 from controllers.model_predictive_controller import Model_Predictive_Control
 from controllers.lqr import LinearQuadraticRegulator
@@ -233,7 +233,7 @@ class controller:
         rospy.init_node('control')
         self.pub_motor = rospy.Publisher('/ciconia/vel_cmd', Float64MultiArray, queue_size=4)
         self.pub_control_surface = rospy.Publisher('/ciconia/joint_controlDeflection_controller/command', Float64MultiArray, queue_size=4)
-        self.pub_a_topic = rospy.Publisher('/ciconia/hi', String, queue_size=4)
+
         #rospy.Subscriber("/ciconia/imu", Imu, self.imu_data_handler)
         rospy.Subscriber("/ciconia/gps/fix", NavSatFix, self.gps_pos_data_handler)
         rospy.Subscriber("/ciconia/gps/fix_velocity", Vector3Stamped, self.gps_vel_data_handler)

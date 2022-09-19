@@ -5,9 +5,8 @@ from numpy import nan
 import rospy, os, sys, time
 import math
 
-from geometry_msgs.msg import Pose, Vector3, Vector3Stamped, Quaternion
-from sensor_msgs.msg import Imu, NavSatFix, Temperature, FluidPressure
-from std_msgs.msg import Float64MultiArray, Float32, Float64
+from geometry_msgs.msg import Vector3, Quaternion
+from std_msgs.msg import Float64
 
 from utils import *
 
@@ -70,8 +69,6 @@ class diffPressure:
         self.u_ned_w =  msg.x
         self.v_ned_w = -msg.y
         self.w_ned_w = -msg.z  
-
- 
 
 
     def _filtered_vel_handler(self, event):

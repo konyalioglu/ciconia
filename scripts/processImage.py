@@ -6,12 +6,13 @@ Created on Wed Aug 18 12:01:49 2021
 @author: turan
 """
 
-import cv2
 import cv2.aruco as aruco
 import numpy as np
-import math
-import os
+import math, os, cv2, rospy
 from utils import *
+from sensor_msgs.msg import Image
+from geometry_msgs.msg import Vector3Stamped
+
 
 class readImage:
     
@@ -35,6 +36,18 @@ class readImage:
         
         self.pos = np.array([[],[],[]])
         self.ori = np.array([[],[],[]])
+
+        self.markerRotation = Vector3Stamped()
+        self.markerPosition = Vector3Stamped()
+        self.cameraRotation = Vector3Stamped()
+        self.cameraPosition = Vector3Stamped()
+
+        rospy.init_node('control')
+        rospy.Subscriber("/ciconia/camera/image_raw", Image, self.image_handler)
+        self._filtered_vel_pub = rospy.Publisher('/marker_detection/marker/position', Vector3Stamped, queue_size=5)
+        self._filtered_vel_pub = rospy.Publisher('/marker_detection/marker/rotation', Vector3Stamped, queue_size=5)
+        self._filtered_vel_pub = rospy.Publisher('/marker_detection/camera/position', Vector3Stamped, queue_size=5)
+        self._filtered_vel_pub = rospy.Publisher('/marker_detection/camera/rotation', Vector3Stamped, queue_size=5)
 
 
     def __isRotationMatrix(self, R):
@@ -62,7 +75,13 @@ class readImage:
             z = 0
     
         return np.array([x, y, z])
-        
+
+
+    def image_handler(self, msg):
+        im = np.frombuffer(msg.data, dtype=np.uint8).reshape(msg.height, msg.width, -1)
+        self.markerDetection.process_image(im)
+        return 0
+
         
     def process_image(self, img, ori_vec=None):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -137,7 +156,22 @@ class readImage:
                 str_attitude = "CAMERA Attitude r=%f  p=%f  y=%f"%(roll_camera, pitch_camera, yaw_camera)
                 cv2.putText(img, str_attitude, (0, 250), self.__font, 1, (0, 255, 0), 2, cv2.LINE_AA)
                 
-            
+
+        self.cameraPosition.vector.x = pos_camera[[0]]
+        self.cameraPosition.vector.y = pos_camera[[1]]
+        self.cameraPosition.vector.z = pos_camera[[2]]
+
+        self.cameraRotation.vector.x = roll_camera
+        self.cameraRotation.vector.y = pitch_camera
+        self.cameraRotation.vector.z = yaw_camera
+
+        self.markerPosition.vector.x = tvec[0]/100
+        self.markerPosition.vector.y = tvec[1]/100
+        self.markerPosition.vector.z = tvec[2]/100
+
+        self.markerRotation.vector.x = roll_marker
+        self.markerRotation.vector.y = pitch_marker
+        self.markerRotation.vector.z = yaw_marker
             
         cv2.imshow('frame', img)
         key = cv2.waitKey(1) & 0xFF

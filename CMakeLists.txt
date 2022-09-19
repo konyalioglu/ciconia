@@ -14,22 +14,32 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(gazebo REQUIRED)
 
 
-catkin_package(CATKIN_DEPENDS
-  rospy
-  std_msgs
-  message_runtime
-  xsens_msgs
-  gazebo_msgs
-)
-
-
 add_message_files(
   FILES
-  rc_messages.msg
+  rcMessages.msg
+  quadrotorControl.msg
+  transitionControl.msg
+  flightControl.msg
 )
 
 
 catkin_python_setup()
+
+
+generate_messages(
+   DEPENDENCIES
+   std_msgs  
+ )
+
+
+catkin_package(CATKIN_DEPENDS
+  rospy
+  std_msgs
+  message_generation
+  message_runtime
+  xsens_msgs
+  gazebo_msgs
+)
 
 
 include_directories(include ${catkin_INCLUDE_DIRS} ${GAZEBO_INCLUDE_DIRS})
@@ -42,19 +52,4 @@ target_link_libraries(joint_plugin ${GAZEBO_LIBRARIES})
 
 add_library(gazeboStatePublisherPlugin SHARED plugins/src/gazeboStatePublisherPlugin.cpp)
 target_link_libraries(gazeboStatePublisherPlugin ${GAZEBO_LIBRARIES})
-
-
-
-#catkin_install_python(PROGRAMS
-#  scripts/control.py 
-#  scripts/physics.py
-#  scripts/processImage.py
-#  scripts/utils.py
-#  scripts/SensorModels/xsensSensorModel.py
-#  scripts/Controllers/model_predictive_controller.py 
-#  scripts/Controllers/lqr.py 
-#  scripts/Controllers/pid.py 
-#  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-#)
-
 

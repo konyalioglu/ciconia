@@ -350,11 +350,9 @@ class xsensModel:
         latitude  = self.latitude_ref + np.arcsin(X_W / self.earth_equatorial_radius) * 180 / np.pi
         longitude = self.longitude_ref + np.arcsin(Y_W / self.earth_polar_radius / np.cos(self.longitude_ref * np.pi / 180)) * 180 / np.pi
         altitude  = -Z_W + self.altitude_ref
-        
         self.gnss.latitude = latitude
         self.gnss.longitude = longitude
         self.gnss.altitude = altitude
-
         self._gnss_pub.publish(self.gnss)
         
         
