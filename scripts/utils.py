@@ -10,6 +10,7 @@ import numpy as np
 
 
 
+
 def rotzB2E(angle):
     return np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
 
@@ -89,26 +90,51 @@ def quaternion_to_euler_angle(w, x, y, z):
 
      t0 = +2.0 * (w * x + y * z)
      t1 = +1.0 - 2.0 * (x * x + ysqr)
-     X = math.atan2(t0, t1)
+     X = np.arctan2(t0, t1)
 
      t2 = +2.0 * (w * y - z * x)
      t2 = +1.0 if t2 > +1.0 else t2
      t2 = -1.0 if t2 < -1.0 else t2
-     Y = math.asin(t2)
+     Y = np.arcsin(t2)
 
      t3 = +2.0 * (w * z + x * y)
      t4 = +1.0 - 2.0 * (ysqr + z * z)
-     Z = math.atan2(t3, t4)
+     Z = np.arctan2(t3, t4)
 
      return X, Y, Z
      
      
-def get_quaternion_from_euler(phi, theta, psi):
+def euler_to_quaternion(phi, theta, psi):
 
-  qx = np.sin(phi/2) * np.cos(theta/2) * np.cos(psi/2) - np.cos(phi/2) * np.sin(theta/2) * np.sin(psi/2)
-  qy = np.cos(phi/2) * np.sin(theta/2) * np.cos(psi/2) + np.sin(phi/2) * np.cos(theta/2) * np.sin(psi/2)
-  qz = np.cos(phi/2) * np.cos(theta/2) * np.sin(psi/2) - np.sin(phi/2) * np.sin(theta/2) * np.cos(psi/2)
-  qw = np.cos(phi/2) * np.cos(theta/2) * np.cos(psi/2) + np.sin(phi/2) * np.sin(theta/2) * np.sin(psi/2)
+    qx = np.sin(phi/2) * np.cos(theta/2) * np.cos(psi/2) - np.cos(phi/2) * np.sin(theta/2) * np.sin(psi/2)
+    qy = np.cos(phi/2) * np.sin(theta/2) * np.cos(psi/2) + np.sin(phi/2) * np.cos(theta/2) * np.sin(psi/2)
+    qz = np.cos(phi/2) * np.cos(theta/2) * np.sin(psi/2) - np.sin(phi/2) * np.sin(theta/2) * np.cos(psi/2)
+    qw = np.cos(phi/2) * np.cos(theta/2) * np.cos(psi/2) + np.sin(phi/2) * np.sin(theta/2) * np.sin(psi/2)
  
-  return qx, qy, qz, qw
+    return qx, qy, qz, qw
+
+
+def quaternion_to_gravity(qw, qx, qy, qz):
+    x = 2 * (qx * qz - qw * qy)
+    y = 2 * (qw * qx + qy * qz)
+    z = qw * qw - qx * qx - qy * qy + qz * qz
+    return x, y, z
+
+
+def earth_radiuses(ref_latitude):
+    ##
+    ## https://github.com/tu-darmstadt-ros-pkg/hector_gazebo/blob/melodic-devel/hector_gazebo_plugins/src/gazebo_ros_gps.cpp
+    ##
+    
+    equatorial_radius = 6378137.0
+    flattening = 1.0/298.257223563
+    excentrity = 2*flattening - flattening*flattening
+    tmp = 1.0 / (1.0 - excentrity * np.sin(ref_latitude * np.pi/180.0) * np.sin(ref_latitude * np.pi/180.0))
+    prime_vertical_radius = equatorial_radius * np.sqrt(tmp)
+
+    radius_north = prime_vertical_radius * (1 - excentrity) * tmp
+    radius_east  = prime_vertical_radius * np.cos(ref_latitude * np.pi/180.0)
+    return radius_north, radius_east
+     
+     
      

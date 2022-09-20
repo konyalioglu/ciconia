@@ -56,6 +56,9 @@
     <node name="physics" pkg="ciconia" type="physics.py" output="screen"/>
     
     
+    <node name="stateEstimator" pkg="ciconia" type="stateEstimator.py" output="screen"/>
+    
+    
     <node name="xsens_sensor_model" pkg="ciconia" type="xsensSensorModel.py" output="screen"/>
     
     

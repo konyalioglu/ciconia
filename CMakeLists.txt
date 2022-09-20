@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  geometry_msgs
   message_generation
   xsens_msgs
   gazebo_msgs
@@ -20,6 +21,7 @@ add_message_files(
   quadrotorControl.msg
   transitionControl.msg
   flightControl.msg
+  estimatedStates.msg
 )
 
 
@@ -29,12 +31,14 @@ catkin_python_setup()
 generate_messages(
    DEPENDENCIES
    std_msgs  
+   geometry_msgs
  )
 
 
 catkin_package(CATKIN_DEPENDS
   rospy
   std_msgs
+  geometry_msgs
   message_generation
   message_runtime
   xsens_msgs

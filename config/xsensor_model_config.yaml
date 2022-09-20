@@ -4,15 +4,15 @@
 latitude_ref: 45
 longitude_ref: 12
 altitude_ref: 0
-gnss_pos_x_var: 1
-gnss_pos_y_var: 1
-gnss_pos_z_var: 0.5
+gnss_pos_x_var: 0
+gnss_pos_y_var: 0
+gnss_pos_z_var: 0
 gnss_rate: 4
 
 #Position Config
-filter_pos_x_var: 1
-filter_pos_y_var: 1
-filter_pos_z_var: 0.5
+filter_pos_x_var: 0.5
+filter_pos_y_var: 0.5
+filter_pos_z_var: 0.2
 position_rate: 10
 
 #Velocity Config

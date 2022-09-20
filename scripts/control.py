@@ -8,7 +8,7 @@ from sensor_msgs.msg import JointState, Imu, NavSatFix, Image
 from gazebo_msgs.msg import ModelStates, LinkStates
 from rosgraph_msgs.msg import Clock
 from std_msgs.msg import Float64MultiArray, Float32, String 
-from ciconia.msg import quadrotorControl, transitionControl, flightControl
+from ciconia.msg import quadrotorControl, transitionControl, flightControl, estimatedStates
 
 from controllers.model_predictive_controller import Model_Predictive_Control
 from controllers.lqr import LinearQuadraticRegulator
@@ -121,9 +121,9 @@ class controller:
         self.latitude  = 0
         self.longitude = 0
 
-        self.x_pos_global = 0
-        self.y_pos_global = 0
-        self.z_pos_global = 0
+        self.x = 0
+        self.y = 0
+        self.z = 0
 
         self.x_vel_global = 0
         self.y_vel_global = 0
@@ -227,7 +227,7 @@ class controller:
         self.control_surface_input = Float64MultiArray()
         self.message = String()
         self.bridge = CvBridge()
-        self.markerDetection = readImage(5, 10)
+        #self.markerDetection = readImage(5, 10)
 
         ##Ros Initialization
         rospy.init_node('control')
@@ -235,11 +235,11 @@ class controller:
         self.pub_control_surface = rospy.Publisher('/ciconia/joint_controlDeflection_controller/command', Float64MultiArray, queue_size=4)
 
         #rospy.Subscriber("/ciconia/imu", Imu, self.imu_data_handler)
-        rospy.Subscriber("/ciconia/gps/fix", NavSatFix, self.gps_pos_data_handler)
-        rospy.Subscriber("/ciconia/gps/fix_velocity", Vector3Stamped, self.gps_vel_data_handler)
-        rospy.Subscriber("/gazebo/link_states", LinkStates, self.pose_handler)
+        #rospy.Subscriber("/xsens/filter/positionlla", Vector3Stamped, self.gps_pos_data_handler)
+        #rospy.Subscriber("/xsens/filter/velocity", Vector3Stamped, self.gps_vel_data_handler)
+
+        rospy.Subscriber("/ciconia/filter/states", estimatedStates, self._estimator_handler)
         rospy.Subscriber("/clock", Clock, self.sim_time_handler)
-        rospy.Subscriber("/ciconia/camera/image_raw", Image, self.image_handler)
 
 
     def quaternion_to_euler_angle(self, w, x, y, z):
@@ -361,25 +361,25 @@ class controller:
         return float(xr), float(yr), float(zr)
 
 
-    def imu_data_handler(self, data):
-
-        phi, theta, psi = self.quaternion_to_euler_angle(data.orientation.w, data.orientation.x, data.orientation.y, data.orientation.z)
-
-        self.roll  = phi
-        self.pitch = -theta
-        self.yaw   = -psi
-
-        self.roll_rate = data.angular_velocity.x
-        self.pitch_rate = -data.angular_velocity.y
-        self.yaw_rate = -data.angular_velocity.z
-
-        return
+    def _estimator_handler(self, msg):
+        self.x = msg.position.x
+        self.y = msg.position.y
+        self.z = msg.position.z
+        self.u = msg.velocity.x
+        self.v = msg.velocity.y
+        self.w = msg.velocity.z
+        self.p = msg.angular_rate.x
+        self.q = msg.angular_rate.y
+        self.r = msg.angular_rate.z
+        self.phi = msg.euler_angle.x
+        self.theta = msg.euler_angle.y
+        self.psi = msg.euler_angle.z
 
 
     def gps_pos_data_handler(self, msg):
 
         r_earth = 6371000
-        self.z_pos_global = -msg.altitude
+        self.z = -msg.altitude
 
         if self.gps_flag == 0:
             self.init_lat  = msg.latitude - 49.89999999974
@@ -392,8 +392,8 @@ class controller:
             a  = 6378137.0
             b  = 6356752.3
 
-            self.x_pos_global = a * math.sin(math.radians(self.latitude))
-            self.y_pos_global = b * math.sin(math.radians(self.longitude)) * math.cos(math.radians(49.89999999974))
+            self.x = a * math.sin(math.radians(self.latitude))
+            self.y = b * math.sin(math.radians(self.longitude)) * math.cos(math.radians(49.89999999974))
 
         return
 
@@ -464,50 +464,6 @@ class controller:
         return np.array([[p],[q],[r]])
 
 
-    def pose_handler(self, data):
-
-        body_index = data.name.index('ciconia::body')
-
-        r_body = data.pose[body_index].position
-
-        orientation = data.pose[body_index].orientation
-        self.phi, self.theta, self.psi = self.quaternion_to_euler_angle(orientation.w, orientation.x, orientation.y, orientation.z)
-        self.phi_ned = self.phi
-        self.theta_ned = -self.theta
-        self.psi_ned = -self.psi
-
-        ori_vector = np.array([[self.phi], [self.theta], [self.psi]])
-        ori_vector_ned = np.array([[self.phi_ned], [self.theta_ned], [self.psi_ned]])
-
-        vel_vector = np.array([[data.twist[body_index].linear.x],[data.twist[body_index].linear.y],[data.twist[body_index].linear.z]])
-        vel_vector_ned = np.array([[data.twist[body_index].linear.x],[-data.twist[body_index].linear.y],[-data.twist[body_index].linear.z]])
-
-        vel_vector = self.earth2body_transformation(ori_vector, vel_vector)
-        #vel_vector_ned = self.body2earth_transformation(ori_vector_ned, vel_vector_ned)
-
-        self.u = vel_vector[0]
-        self.v = vel_vector[1]
-        self.w = vel_vector[2]
-        #print(self.u,self.v,self.w)
-
-        self.u_ned = self.u
-        self.v_ned = -self.v
-        self.w_ned = -self.w
-
-        rates = np.array([[data.twist[body_index].angular.x],[data.twist[body_index].angular.y],[data.twist[body_index].angular.z]])
-        rates = self.earth2body_transformation(ori_vector, rates)
-        rates = self.euler_rate2body_rate(ori_vector, rates)
-        
-        self.p = rates[0,0]
-        self.q = rates[1,0]
-        self.r = rates[2,0]
-
-        self.p_ned = rates[0,0]
-        self.q_ned = -rates[1,0]
-        self.r_ned = -rates[2,0]
-        return
-
-
     def sim_time_handler(self, data):
         seconds = data.clock.secs
         nano_seconds = data.clock.nsecs
@@ -515,19 +471,6 @@ class controller:
         self.sim_time = seconds + nano_seconds / 1000000000
         #print(self.sim_time)
         return
-
-
-    def gps_vel_data_handler(self, msg):
-        self.x_vel_global = msg.vector.x
-        self.y_vel_global = -msg.vector.y
-        self.z_vel_global = -msg.vector.z
-        return
-
-
-    def image_handler(self, msg):
-        im = np.frombuffer(msg.data, dtype=np.uint8).reshape(msg.height, msg.width, -1)
-        self.markerDetection.process_image(im)
-        return 0
 
 
     def lidar_data_handler(self, msg):
@@ -797,7 +740,7 @@ class controller:
         else:
             time_change = self.current_alt_time - self.prev_alt_time
             self.prev_alt_time = self.current_alt_time
-            alt_error = set_z - self.z_pos_global
+            alt_error = set_z - self.z
             self.alt_error_sum  += (alt_error + self.prev_alt_error) / 2 * time_change
             alt_error_rate = (alt_error - self.prev_alt_error) / time_change
 
@@ -879,9 +822,9 @@ class controller:
             time_change = self.current_pos_time - self.prev_pos_time
             self.prev_pos_time = self.current_pos_time
 
-            pos_x_error = pos_x - self.x_pos_global
-            pos_y_error = pos_y - self.y_pos_global
-            pos_z_error = pos_z - self.z_pos_global
+            pos_x_error = pos_x - self.x
+            pos_y_error = pos_y - self.y
+            pos_z_error = pos_z - self.z
 
             self.pos_x_error_sum  += (pos_x_error + self.prev_pos_x_error) / 2 * time_change
             self.pos_y_error_sum  += (pos_y_error + self.prev_pos_y_error) / 2 * time_change
@@ -1582,15 +1525,11 @@ class controller:
         ref_flight = np.array([[0],[0],[0],[0],[15],[0],[0],[0],[0],[0.8]]).reshape(10,1)
         
         while not rospy.is_shutdown():
-            
-            ori_vector_ned = np.array([[self.phi_ned], [self.theta_ned], [self.psi_ned]])
-            pos_body = self.earth2body_transformation(ori_vector_ned, np.array([[self.x_pos_global], [self.y_pos_global], [self.z_pos_global]]))
-            vel_body = self.earth2body_transformation(ori_vector_ned, np.array([[self.x_vel_global], [self.y_vel_global], [self.z_vel_global]]))
 
-            self.state_vector = np.array([[pos_body[0,0]],[vel_body[0,0]],[pos_body[1,0]],[vel_body[1,0]],[pos_body[2,0]],[vel_body[2,0]],[self.phi_ned],[self.p_ned],[self.theta_ned],[self.q_ned],[self.psi_ned],[self.r_ned]], dtype= 'float32')
-            self.states_flight = np.array([[self.u_ned],[self.w_ned],[self.q_ned],[self.theta_ned],[-self.z_pos_global],[self.v_ned],[self.p_ned],[self.r_ned],[self.phi_ned],[self.psi_ned]],dtype= 'float32')
+            self.state_vector = np.array([[self.x],[self.u],[self.y],[self.v],[self.z],[self.w],[self.phi],[self.p],[self.theta],[self.q],[self.psi],[self.r]], dtype= 'float32')
+            self.states_flight = np.array([[self.u],[self.w],[self.q],[self.theta],[self.z],[self.v],[self.p],[self.r],[self.phi],[self.psi]],dtype= 'float32')
             #print(self.states_flight)
-            states = np.array([[self.sim_time],[self.x_pos_global],[self.u_ned],[self.y_pos_global],[self.v_ned],[self.z_pos_global],[self.w_ned],[self.phi_ned],[self.p_ned],[self.theta_ned],[self.q_ned],[self.psi_ned],[self.r_ned]]).reshape(1,13)
+            states = np.array([[self.sim_time],[self.x],[self.u],[self.y],[self.v],[self.z],[self.w],[self.phi],[self.p],[self.theta],[self.q],[self.psi],[self.r]]).reshape(1,13)
             self.state_store = np.concatenate((self.state_store, states), axis=0)
             #self.mission_planner()
             #self.message.data = "hello"

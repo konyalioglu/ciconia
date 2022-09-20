@@ -1,21 +1,49 @@
-import rclpy
-from rclpy.node import Node
+#! /usr/bin/python3
+
+import rospy
 from std_msgs.msg import Float64MultiArray, Float32
+from geometry_msgs.msg import Vector3Stamped
 from sensor_msgs.msg import Imu
-from .Sensor_Fusion.Kalman_Filter import State_Estimation
+#from .Sensor_Fusion.Kalman_Filter import State_Estimation
+from ciconia.msg import estimatedStates
 import numpy as np
-from .utils import *
+from utils import *
 
 
-class KalmanFilter(Node):
+class State_Estimator():
+
     def __init__(self):
-        super().__init__('kalman_node')
-        self.dt = 0.02
-        self.subscription_mag = self.create_subscription(Float32, '/akillipaket/IMU/Magnetometer', self.__mag_callback, 4)
-        self.subscription_imu = self.create_subscription(Imu, '/akillipaket/IMU/Sensor_Data', self.__imu_callback, 4)
-        self.subscription_gps = self.create_subscription(Float64MultiArray, '/akillipaket/GPS/fix', self.__gps_callback, 4)
-        self.subscription_aru = self.create_subscription(Float64MultiArray, '/akillipaket/Aruco/Marker/relativePose', self.__aru_callback, 1)
-        self.state_estimator_publisher_ = self.create_publisher(Float64MultiArray, '/akillipaket/Kalman/States', 4)
+
+        self.phi = 0
+        self.theta = 0
+        self.psi = 0
+
+        self.u = 0
+        self.v = 0
+        self.w = 0
+
+        self.x = 0
+        self.y = 0
+        self.z = 0
+
+        self.p = 0
+        self.q = 0
+        self.r = 0
+
+        self.gps_flag = 0
+
+        rospy.init_node('state_estimator')
+
+        self.dt = 0.01
+
+        rospy.Subscriber("/xsens/filter/positionlla", Vector3Stamped, self._position_handler)
+        rospy.Subscriber("/xsens/filter/velocity", Vector3Stamped, self._velocity_handler)
+        rospy.Subscriber("/xsens/sensor/imu", Imu, self._imu_handler)
+
+        self.state_estimator_publisher_ = rospy.Publisher('/ciconia/filter/states', estimatedStates, queue_size=4)
+        self._prediction_timer = rospy.Timer(rospy.Duration(self.dt), self.__timer_callback)
+
+        self.estimated_states = estimatedStates() 
 
         self.gps_variance = 2.0
         self.imu_accel_variance = 0.01
@@ -67,9 +95,8 @@ class KalmanFilter(Node):
                        [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0],
                        [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1]])
 
-        self.kalman_ = State_Estimation(P0, gammat, gammar, Qt_gps, Qt_imu, Qt_mag, Qt_aru, Qt_aru2)
+        #self.kalman_ = State_Estimation(P0, gammat, gammar, Qt_gps, Qt_imu, Qt_mag, Qt_aru, Qt_aru2)
         self.state_msg = Float64MultiArray()
-        self.timer = self.create_timer(self.dt, self.__timer_callback)
         self.r = 0.0
         self.k = 0
         self.prev_heading = None
@@ -81,12 +108,25 @@ class KalmanFilter(Node):
 
 
 
-    def __timer_callback(self):
+    def __timer_callback(self, event):
         #self.get_logger().info('Prediction')
-        xt = self.kalman_.xt
-        self.state_msg.data  = [xt[0,0], xt[1,0], xt[2,0], xt[3,0], xt[4,0], xt[5,0], xt[6,0], xt[7,0], xt[8,0], xt[9,0]*180/np.pi, xt[10,0], xt[11,0], xt[12,0], xt[13,0], self.r]
-        self.state_estimator_publisher_.publish(self.state_msg)
-        self.kalman_.KF_Predict(self.dt)
+        #xt = self.kalman_.xt
+        #self.state_msg.data  = [xt[0,0], xt[1,0], xt[2,0], xt[3,0], xt[4,0], xt[5,0], xt[6,0], xt[7,0], xt[8,0], xt[9,0]*180/np.pi, xt[10,0], xt[11,0], xt[12,0], xt[13,0], self.r]
+        #self.state_estimator_publisher_.publish(self.state_msg)
+        self.estimated_states.position.x = self.x
+        self.estimated_states.position.y = self.y
+        self.estimated_states.position.z = self.z
+        self.estimated_states.velocity.x = self.u
+        self.estimated_states.velocity.y = self.v
+        self.estimated_states.velocity.z = self.w
+        self.estimated_states.angular_rate.x = self.p
+        self.estimated_states.angular_rate.y = self.q
+        self.estimated_states.angular_rate.z = self.r
+        self.estimated_states.euler_angle.x = self.phi
+        self.estimated_states.euler_angle.y = self.theta
+        self.estimated_states.euler_angle.z = self.psi
+        self.state_estimator_publisher_.publish(self.estimated_states)
+
 
 
     def __heading_handler(self, heading):
@@ -106,60 +146,46 @@ class KalmanFilter(Node):
             return heading
 
 
-    def __mag_callback(self, msg):
-        #self.get_logger().info('Magnetometer Correction')
-        heading = self.__heading_handler(msg.data*np.pi/180)
-        zt = np.array([[heading]])
-        self.kalman_.MAG_Update(zt)
+    def _position_handler(self, msg):
+        lat = msg.vector.x
+        lon = msg.vector.y
+        alt = msg.vector.z
+        r_earth = 6371000
+        self.z = -alt
 
+        if self.gps_flag == 0:
+            self.init_lat  = lat - 45
+            self.init_long = lon - 12
+            self.gps_flag = 1
+        else:
+            self.latitude  = lat - 45
+            self.longitude = lon - 12
 
-    def __imu_callback(self, msg):
-        #self.get_logger().info('IMU Correction')
-        accel = np.array([[msg.linear_acceleration.x], [msg.linear_acceleration.y], [msg.linear_acceleration.z]])
-        angular_rates  = np.array([[msg.angular_velocity.x], [msg.angular_velocity.y], [msg.angular_velocity.z]])
-        euler_angles = np.array([[msg.orientation.x], [msg.orientation.y], [self.kalman_.xt[9,0]]])
-        self.r = angular_rates[2,0]
+            a  = 6378137.0
+            b  = 6356752.3
 
-        accel = body2earth_transformation(euler_angles, accel)
-        _,_,yaw_rate = body2earth_rate_transformation(euler_angles, angular_rates)
-        zt = np.array([[accel[0,0]],[accel[1,0]],[accel[2,0]],[angular_rates[2,0]]])
-        self.kalman_.IMU_Update(zt)
+            self.x = a * np.sin(np.radians(self.latitude))
+            self.y = b * np.sin(np.radians(self.longitude)) * np.cos(np.radians(45))
+            
+    
+    def _velocity_handler(self, msg):
+        self.u = msg.vector.x
+        self.v = msg.vector.y
+        self.w = msg.vector.z
 
+    def _imu_handler(self, msg):
+        self.phi, self.theta, self.psi = quaternion_to_euler_angle(msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z)
 
-    def __gps_callback(self, msg):
-        #self.get_logger().info('GPS Correction')
-        z_gps = np.array([[msg.data[0]], [msg.data[1]], [-msg.data[2]]])
-        self.kalman_.GPS_Update(z_gps)
+        self.p = msg.angular_velocity.x
+        self.q = msg.angular_velocity.y
+        self.r = msg.angular_velocity.z
 
-
-    def __aru_callback(self, msg):
-        heading = msg.data[6]*np.pi/180
-        if self.yaw_offset_counter < 20 and self.kalman_.xt[9,0] != 0.0:
-            self.yaw_offset_counter += 1
-            self.marker_yaw_offset += self.kalman_.xt[9,0] - heading
-            if self.yaw_offset_counter == 20:
-                self.marker_yaw_offset = self.marker_yaw_offset / self.yaw_offset_counter
-            self.get_logger().info('OFFSET: ' + str(self.marker_yaw_offset*180/np.pi))
-            return
-        elif self.yaw_offset_counter == 20:
-            yaw = self.__heading_handler(heading+self.marker_yaw_offset)
-            self.get_logger().info('ARUCO Correction: ' + str(yaw*180/np.pi) + '  ' + str((self.kalman_.xt[9,0])*180/np.pi) + '  '+ str(self.marker_yaw_offset) )
-            xy_pos_e = rotzB2E(self.marker_yaw_offset) @ np.array([[msg.data[0]], [msg.data[1]]])
-            xy_vel_e = rotzB2E(self.marker_yaw_offset) @ np.array([[msg.data[3]], [msg.data[4]]])
-            #z_aru = np.array([[xy_pos_e[0,0]], [xy_pos_e[1,0]], [-msg.data[2]], [xy_vel_e[0,0]], [xy_vel_e[1,0]], [-msg.data[5]], [yaw]])
-            z_aru = np.array([[xy_pos_e[0,0]], [xy_pos_e[1,0]], [-msg.data[2]], [yaw]])
-
-            self.kalman_.ARU2_Update(z_aru)
-
+        return
 
 def main():
-    rclpy.init()
-    sf = KalmanFilter()
+    sf = State_Estimator()
 
-    rclpy.spin(sf)
-
-    sf.destroy_node()
-    rclpy.shutdown()
+    rospy.spin()
 
 
 if __name__ == '__main__':

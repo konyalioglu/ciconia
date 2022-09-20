@@ -300,8 +300,8 @@ class xsensModel:
         self.quat_z = msg.z  
         self.quat_w = msg.w
 
-        x, y, z = quaternion_to_euler_angle(self.quat_x, self.quat_y, self.quat_z, self.quat_w)
-        gx, gy, gz  = quaternion_to_gravity(self.quat_x, self.quat_y, self.quat_z, self.quat_w)
+        x, y, z = quaternion_to_euler_angle(self.quat_w, self.quat_x, self.quat_y, self.quat_z)
+        gx, gy, gz  = quaternion_to_gravity(self.quat_w, self.quat_x, self.quat_y, self.quat_z)
         self.phi_ned = x
         self.theta_ned = -y
         self.psi_ned = -z
@@ -389,18 +389,18 @@ class xsensModel:
         
         
     def _filtered_imu_handler(self, event):
-        phi = self.phi_ned + np.random.normal(0,self.filtered_euler_x_var)
-        theta = self.theta_ned + np.random.normal(0,self.filtered_euler_y_var)
-        psi = self.psi_ned + np.random.normal(0,self.filtered_euler_z_var)
+        #phi = self.phi_ned + np.random.normal(0,self.filtered_euler_x_var)
+        #theta = self.theta_ned + np.random.normal(0,self.filtered_euler_y_var)
+        #psi = self.psi_ned + np.random.normal(0,self.filtered_euler_z_var)
 
-        qx, qy, qz, qw = euler_to_quaternion(phi, theta, psi)
+        #qx, qy, qz, qw = euler_to_quaternion(phi, theta, -psi)
         angular_vel = earth2body_transformation(self.euler_angles, np.array([[self.p_ned_w],[self.q_ned_w],[self.r_ned_w]]))
         linear_accel = earth2body_transformation(self.euler_angles, np.array([[self.du_ned_w],[self.dv_ned_w],[self.dw_ned_w]]))
 
-        self.imu.orientation.x = qx
-        self.imu.orientation.y = qy
-        self.imu.orientation.z = qz
-        self.imu.orientation.w = qw
+        self.imu.orientation.x = self.quat_x + np.random.normal(0,self.filtered_euler_x_var)/2
+        self.imu.orientation.y = -self.quat_y + np.random.normal(0,self.filtered_euler_x_var)/2
+        self.imu.orientation.z = -self.quat_z + np.random.normal(0,self.filtered_euler_x_var)/2
+        self.imu.orientation.w = self.quat_w + np.random.normal(0,self.filtered_euler_x_var)/2
 
         self.imu.angular_velocity.x = angular_vel[0,0] + np.random.normal(0,self.filtered_gyro_x_var)
         self.imu.angular_velocity.y = angular_vel[1,0] + np.random.normal(0,self.filtered_gyro_x_var)
