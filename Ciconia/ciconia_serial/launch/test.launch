@@ -1,0 +1,8 @@
+<launch>
+   
+    <node name="test_node" pkg="ciconia_serial" type="serial_test.py" output="screen"/>
+
+    <node name="serial_node" pkg="ciconia_serial" type="serialization.py" output="screen"/>
+
+
+</launch>

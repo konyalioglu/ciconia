@@ -1,0 +1,27 @@
+ahrs_rate: 100
+
+acc_topic: '/xsens/imu/acceleration'
+mag_topic: '/xsens/imu/mag'
+gyr_topic: '/xsens/imu/angular_velocity'
+
+process_cov:
+    - 1
+    - 1
+    - 1
+
+accelerometer_cov:
+    - 0.01
+    - 0.01
+    - 0.01
+
+magnetometer_cov:
+    - 0.01
+    - 0.01
+    - 0.01
+
+gyroscope_cov:
+    - 0.01
+    - 0.01
+    - 0.01
+
+

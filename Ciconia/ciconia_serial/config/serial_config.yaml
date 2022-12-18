@@ -1,0 +1,6 @@
+
+
+device: /dev/ttyACM0
+control_signal_topic: /ciconia/control_signals
+rc_signal_topic: /ciconia/sbus_signal
+

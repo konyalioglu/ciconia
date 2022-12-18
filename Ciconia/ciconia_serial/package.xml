@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ciconia_serial</name>
+  <version>0.0.0</version>
+  <description>The ciconia_serial package</description>
+
+  <maintainer email="turan.konyalioglu@gmail.com">turan</maintainer>
+
+  <license>TODO</license>
+
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>ciconia_msgs</build_depend>
+  
+  <build_export_depend>rospy</build_export_depend>
+  <build_export_depend>std_msgs</build_export_depend>
+  <build_export_depend>geometry_msgs</build_export_depend>
+  <build_export_depend>xsens_msgs</build_export_depend>
+  <build_export_depend>ciconia_msgs</build_export_depend>
+  
+  
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>ciconia_msgs</exec_depend>
+
+
+</package>
