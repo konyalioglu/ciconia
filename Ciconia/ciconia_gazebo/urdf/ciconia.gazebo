@@ -1,0 +1,291 @@
+<?xml version="1.0"?>
+<robot>
+  
+  <gazebo reference="body">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+  </gazebo>
+  
+  <gazebo reference="wing">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+  </gazebo>
+  
+  <gazebo reference="aileronR">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+  </gazebo>
+  
+  <gazebo reference="aileronL">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+  </gazebo>
+  
+  <gazebo reference="frame">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <material>Gazebo/Black</material>
+  </gazebo>
+  
+  <gazebo reference="dcmotorFL">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+  </gazebo>
+  
+  <gazebo reference="propFL">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+  </gazebo>
+  
+  <gazebo reference="dcmotorFR">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+  </gazebo>
+  
+  <gazebo reference="propFR">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+  </gazebo>
+  
+  <gazebo reference="dcmotorBL">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+  </gazebo>
+  
+  <gazebo reference="propBL">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+  </gazebo>
+  
+  <gazebo reference="dcmotorBR">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+  </gazebo>
+  
+  <gazebo reference="propBR">
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+  </gazebo>
+  
+  <gazebo reference="verticaltail">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+  </gazebo>
+  
+  <gazebo reference="rudderL">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+  </gazebo>
+  
+  <gazebo reference="rudderR">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+  </gazebo>
+  
+  <gazebo reference="horizontalTail">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+  </gazebo>
+  
+  <gazebo reference="elevator">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+  </gazebo>
+  
+  <gazebo reference="dc_motor_fixed_wing">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+  </gazebo>
+  
+  <gazebo reference="fixed_wing_propeller">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+  </gazebo>
+
+
+  <transmission name="aileronL" >
+    <type>transmission_interface/SimpleTransmission</type>	
+    <joint name="wing2aileronL">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="BLDC_motor6">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="aileronR" >
+    <type>transmission_interface/SimpleTransmission</type>	
+    <joint name="wing2aileronR">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="BLDC_motor7">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="rudderL" >
+    <type>transmission_interface/SimpleTransmission</type>	
+    <joint name="verticaltail2rudderL">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="BLDC_motor8">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="rudderR" >
+    <type>transmission_interface/SimpleTransmission</type>	
+    <joint name="verticaltail2rudderR">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="BLDC_motor8">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="elevator" >
+    <type>transmission_interface/SimpleTransmission</type>	
+    <joint name="horizontalTail2elevator">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="BLDC_motor9">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  
+  
+
+  <!-- ros_control plugin -->
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNameSpace>/ciconia_gazebo</robotNameSpace>
+        <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+    </plugin>
+  </gazebo>
+
+
+  <gazebo>
+    <plugin name="gazebo_ros_force" filename="libgazebo_ros_force.so">
+      <alwaysOn>true</alwaysOn>
+      <update>250</update>
+      <updateRate>250</updateRate>
+      <bodyName>body</bodyName>
+      <topicName>ForcesAndMoments</topicName>
+    </plugin>
+  </gazebo>
+  
+  
+  <gazebo>
+    <plugin name="joint_control" filename="libjoint_plugin.so">
+      <motor1>dcmotorFL2propFL</motor1>
+      <motor2>dcmotorBR2propBR</motor2>
+      <motor3>dcmotorFR2propFR</motor3>
+      <motor4>dcmotorBL2propBL</motor4>
+      <motor5>motor2fwprop</motor5>
+    </plugin>  
+  </gazebo> 
+  
+  <!--  -->
+  <gazebo>
+    <plugin name="xsens_state" filename="libgazeboStatePublisherPlugin.so">
+      <topic>/gazebo/states/xsense</topic>
+      <rate>100</rate>
+      <link_name>body</link_name>
+    </plugin>  
+  </gazebo> 
+  
+  
+  <gazebo>
+    <plugin name="pitot_state" filename="libgazeboStatePublisherPlugin.so">
+      <topic>/gazebo/states/pitot</topic>
+      <rate>10</rate>
+      <link_name>body</link_name>
+    </plugin>  
+  </gazebo> 
+  
+  
+    <!-- camera -->
+  <gazebo reference="hokuyo_link">
+    <sensor type="camera" name="camera1">
+      <update_rate>2.0</update_rate>
+      <camera name="head">
+        <horizontal_fov>1.3962634</horizontal_fov>
+        <image>
+          <width>800</width>
+          <height>800</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>300</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <!-- Noise is sampled independently per pixel on each frame.
+               That pixel's noise value is added to each of its color
+               channels, which at that point lie in the range [0,1]. -->
+          <mean>0.0</mean>
+          <stddev>0.0</stddev>
+        </noise>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <cameraName>camera</cameraName>
+        <imageTopicName>image_raw</imageTopicName>
+        <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+        <frameName>body</frameName>
+        <hackBaseline>0.0</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+    </sensor>
+  </gazebo>
+  
+  
+  <gazebo reference="hokuyo_link">
+    <sensor type="gpu_ray" name="head_hokuyo_sensor">
+      <pose>0 0 -0.0 0 0 0</pose>
+      <visualize>true</visualize>
+      <update_rate>40</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>3</samples>
+            <resolution>1</resolution>
+            <min_angle>-0.005</min_angle>
+            <max_angle>0.005</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.8</min>
+          <max>100.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <!-- Noise parameters based on published spec for Hokuyo laser
+               achieving "+-30mm" accuracy at range < 10m.  A mean of 0.0m and
+               stddev of 0.01m will put 99.7% of samples within 0.03m of the true
+               reading. -->
+          <mean>0.0</mean>
+          <stddev>0.00</stddev>
+        </noise>
+      </ray>
+      <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_gpu_laser.so">
+        <topicName>/ciconia/lidar</topicName>
+        <frameName>hokuyo_link</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+  
+  
+</robot>

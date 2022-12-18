@@ -1,0 +1,38 @@
+controller_joint_names: ['', 'wing2aileronR', 'wing2aileronL', 'wing2frame', 'dcmotorFL2propFL', 'dcmotorFR2propFR', 'dcmotorBL2propBL', 'dcmotorBR2propBR', 'verticaltail2rudderL', 'verticaltail2rudderR', 'horizontalTail2elevator', 'motor2fwprop', ]
+
+
+joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 50
+
+joint_motor_controller:
+    type: velocity_controllers/JointGroupVelocityController
+    joints: 
+        - dcmotorFL2propFL
+        - dcmotorBR2propBR
+        - dcmotorFR2propFR
+        - dcmotorBL2propBL
+        - motor2fwprop
+
+    pid_gains:
+        dcmotorFL2propFL: {p: 1000, i: 1, d: 10}
+        dcmotorBR2propBR: {p: 1000, i: 1, d: 10}
+        dcmotorFR2propFR: {p: 1000, i: 1, d: 10}
+        dcmotorBL2propBL: {p: 1000, i: 1, d: 10}
+        motor2fwprop: {p: 0.1, i: 0.001, d: 0.001}
+
+joint_controlDeflection_controller:
+    type: position_controllers/JointGroupPositionController
+    joints: 
+        - wing2aileronL
+        - wing2aileronR
+        - verticaltail2rudderL
+        - verticaltail2rudderR
+        - horizontalTail2elevator
+
+    pid_gains:
+        wing2aileronL: {p: 1000, i: 1, d: 10}
+        wing2aileronR: {p: 1000, i: 1, d: 10}
+        verticaltail2rudderL: {p: 1000, i: 1, d: 10}
+        verticaltail2rudderR: {p: 1000, i: 1, d: 10}
+        horizontalTail2elevator: {p: 1000, i: 1, d: 10}

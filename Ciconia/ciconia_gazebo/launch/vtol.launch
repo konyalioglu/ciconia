@@ -1,0 +1,76 @@
+<launch>
+
+  <arg name="paused" default="true"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/>
+  <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/>
+  <arg name="verbose" default="true"/>
+  
+  
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find ciconia)/worlds/vtol.world"/>
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="headless" value="$(arg headless)"/>
+    <arg name="verbose" value="$(arg verbose)"/>
+  </include>
+
+
+  <arg name="x_sens_node_rate" value="100.0"/>  
+  <param name="x_sens_node_rate" type="double" value="$(arg x_sens_node_rate)" />
+  <rosparam command="load" file="$(find ciconia)/config/xsensor_model_config.yaml"/>
+  
+  <arg name="pitot_tube_sensor_node_rate" value="40.0"/>  
+  <param name="pitot_tube_sensor_node_rate" type="double" value="$(arg pitot_tube_sensor_node_rate)" />
+  <rosparam command="load" file="$(find ciconia)/config/pitot_tube_sensor_config.yaml"/>
+
+
+  <group ns="ciconia">
+		
+    <param name="robot_description" command="$(find xacro)xacro '$(find ciconia)/urdf/vtol.xacro'" />
+	
+		
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" args="-param robot_description -urdf -model ciconia" />
+    
+    
+    <rosparam file="$(find ciconia)/config/vtol_joint_dynamics.yaml" command="load"/>
+
+
+    <rosparam file="$(find ciconia)/config/vtol.yaml" command="load" ns="/ciconia" />
+    
+    
+    <node name="control_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="--namespace=/ciconia joint_state_controller joint_controlDeflection_controller" />
+
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">		
+      <param name="publish_frequency" type="double" value="250.0" />
+    </node>
+    
+    <!--    
+    <node name="x_sens_gazebo_pose_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">		
+      <param name="publish_frequency" type="double" value="$(arg x_sens_node_rate)" />
+    </node>
+    
+    
+    <node name="pitot_tube_gazebo_pose_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">		
+      <param name="publish_frequency" type="double" value="$(arg pitot_tube_sensor_node_rate)" />
+    </node>
+    -->
+    
+    <node name="control" pkg="ciconia" type="control.py" output="screen"/>
+    
+    
+    <node name="physics" pkg="ciconia" type="physics.py" output="screen"/>
+    
+    
+    <node name="xsens_sensor_model" pkg="ciconia" type="xsensSensorModel.py" output="screen"/>
+    
+    
+    <node name="differential_pressure_sensor" pkg="ciconia" type="differentialPressureSensorModel.py" output="screen"/>  
+
+
+  </group>
+</launch>

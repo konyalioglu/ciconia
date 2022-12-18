@@ -1,0 +1,1 @@
+controller_joint_names: ['', 'wing2aileronR', 'wing2aileronL', 'wing2frame', 'frame2dcmotorFL', 'dcmotorFL2propFL', 'frame2dcmotorFR', 'dcmotorFR2propFR', 'frame2dcmotorBL', 'dcmotorBL2propBL', 'frame2dcmotorBR', 'dcmotorBR2propBR', 'verticaltail2rudderL', 'verticaltail2rudderR', 'horizontalTail2elevator', 'body2motor', 'motor2fwprop', ]

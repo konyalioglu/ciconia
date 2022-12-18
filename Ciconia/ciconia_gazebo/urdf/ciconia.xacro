@@ -1,0 +1,1163 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<robot
+    name="ciconia" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  
+  <xacro:include filename="$(find ciconia_gazebo)/urdf/ciconia.gazebo"/>
+
+    <link
+    name="body">
+    <inertial>
+      <origin
+        xyz="-0.14 0.0 0.0"
+        rpy="0 0 0" />
+      <mass
+        value="25" />
+      <inertia
+        ixx="8.638"
+        ixy="0.0"
+        ixz="1.3"
+        iyy="9.014"
+        iyz="0"
+        izz="16.738" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/body.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/body.STL" />
+      </geometry>
+    </collision>
+  </link>
+  
+  <link
+    name="wing">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0001"
+        ixz="0.0001"
+        iyy="0.0001"
+        iyz="-0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/wing.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/wing.STL" />
+      </geometry>
+    </collision>
+  </link>
+  
+  <joint
+    name="body2wing"
+    type="fixed">
+    <origin
+      xyz="-0.42417 -2.11 0.30002"
+      rpy="1.5708 0.034907 -3.1416" />
+    <parent
+      link="body" />
+    <child
+      link="wing" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  
+  <link
+    name="aileronR">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0001"
+        ixz="0.0001"
+        iyy="0.0001"
+        iyz="-0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/aileronR.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/aileronR.STL" />
+      </geometry>
+    </collision>
+  </link>
+  
+  <joint
+    name="wing2aileronR"
+    type="revolute">
+    <origin
+      xyz="-0.06 0.00986 0.06"
+      rpy="0 0 0.020949" />
+    <parent
+      link="wing" />
+    <child
+      link="aileronR" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-0.5236"
+      upper="0.5236"
+      effort="100000"
+      velocity="100000" />
+    <dynamics
+      damping="0.001"
+      friction="0.001" />
+    <!--<safety_controller
+      soft_upper="0"
+      soft_lower="0"
+      k_position="0"
+      k_velocity="0" />-->
+  </joint>
+  
+  <link
+    name="aileronL">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0001"
+        ixz="0.0001"
+        iyy="0.0001"
+        iyz="-0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/aileronL.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/aileronL.STL" />
+      </geometry>
+    </collision>
+  </link>
+  
+  <joint
+    name="wing2aileronL"
+    type="revolute">
+    <origin
+      xyz="-0.06 0.00986 3.56"
+      rpy="0 0 0.024767" />
+    <parent
+      link="wing" />
+    <child
+      link="aileronL" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-0.5236"
+      upper="0.5236"
+      effort="100000"
+      velocity="100000" />
+    <dynamics
+      damping="0.001"
+      friction="0.001" />
+    <!--<safety_controller
+      soft_upper="0"
+      soft_lower="0"
+      k_position="0"
+      k_velocity="0" />-->
+  </joint>
+  
+  <link
+    name="frame">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0001"
+        ixz="0.0001"
+        iyy="0.0001"
+        iyz="-0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/frame.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/frame.STL" />
+      </geometry>
+    </collision>
+  </link>
+  
+  <joint
+    name="wing2frame"
+    type="fixed">
+    <origin
+      xyz="7.576E-05 -0.0021695 1.475"
+      rpy="-1.5708 -1.4444 1.6057" />
+    <parent
+      link="wing" />
+    <child
+      link="frame" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  
+  <link
+    name="dcmotorFL">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0001"
+        ixz="0.0001"
+        iyy="0.0001"
+        iyz="-0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/dcmotorFL.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/dcmotorFL.STL" />
+      </geometry>
+    </collision>
+  </link>
+  
+  <joint
+    name="frame2dcmotorFL"
+    type="fixed">
+    <origin
+      xyz="1.2619 -0.14378 0.81198"
+      rpy="3.1416 0.14556 3.0152" />
+    <parent
+      link="frame" />
+    <child
+      link="dcmotorFL" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  
+  <link
+    name="propFL">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0001"
+        ixz="0.0001"
+        iyy="0.0001"
+        iyz="-0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/propFL.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/propFL.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="dcmotorFL2propFL"
+    type="continuous">
+    <origin
+      xyz="0 0.01 0"
+      rpy="1.5708 -1.3555 0" />
+    <parent
+      link="dcmotorFL" />
+    <child
+      link="propFL" />
+    <axis
+      xyz="0 0 1" />
+    <dynamics
+      damping="0.0"
+      friction="0.0" />
+  </joint>
+  <link
+    name="dcmotorFR">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0001"
+        ixz="0.0001"
+        iyy="0.0001"
+        iyz="-0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/dcmotorFR.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/dcmotorFR.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="frame2dcmotorFR"
+    type="fixed">
+    <origin
+      xyz="0.0020668 0.016269 0.81198"
+      rpy="3.1416 1.501 3.0152" />
+    <parent
+      link="frame" />
+    <child
+      link="dcmotorFR" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="propFR">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0001"
+        ixz="0.0001"
+        iyy="0.0001"
+        iyz="-0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/propFR.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/propFR.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="dcmotorFR2propFR"
+    type="continuous">
+    <origin
+      xyz="0 0.01 0"
+      rpy="1.5708 -0.068476 0" />
+    <parent
+      link="dcmotorFR" />
+    <child
+      link="propFR" />
+    <axis
+      xyz="0 0 1" />
+    <dynamics
+      damping="0.0"
+      friction="0.0" />
+  </joint>
+  <link
+    name="dcmotorBL">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0001"
+        ixz="0.0001"
+        iyy="0.0001"
+        iyz="-0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/dcmotorBL.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/dcmotorBL.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="frame2dcmotorBL"
+    type="fixed">
+    <origin
+      xyz="1.2619 -0.14378 -0.24802"
+      rpy="3.1416 1.501 3.0152" />
+    <parent
+      link="frame" />
+    <child
+      link="dcmotorBL" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="propBL">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0001"
+        ixz="0.0001"
+        iyy="0.0001"
+        iyz="-0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/propBL.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/propBL.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="dcmotorBL2propBL"
+    type="continuous">
+    <origin
+      xyz="0 0.01 0"
+      rpy="1.5708 -0.042043 0" />
+    <parent
+      link="dcmotorBL" />
+    <child
+      link="propBL" />
+    <axis
+      xyz="0 0 1" />
+    <dynamics
+      damping="0.0"
+      friction="0.0" />
+  </joint>
+  <link
+    name="dcmotorBR">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0001"
+        ixz="0.0001"
+        iyy="0.0001"
+        iyz="-0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/dcmotorBR.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/dcmotorBR.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="frame2dcmotorBR"
+    type="fixed">
+    <origin
+      xyz="0.0020668 0.016269 -0.24802"
+      rpy="3.1416 1.501 3.0152" />
+    <parent
+      link="frame" />
+    <child
+      link="dcmotorBR" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="propBR">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0001"
+        ixz="0.0001"
+        iyy="0.0001"
+        iyz="-0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/propBR.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/propBR.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="dcmotorBR2propBR"
+    type="continuous">
+    <origin
+      xyz="0 0.01 0"
+      rpy="1.5708 0 0" />
+    <parent
+      link="dcmotorBR" />
+    <child
+      link="propBR" />
+    <axis
+      xyz="0 0 1" />
+    <dynamics
+      damping="0.0"
+      friction="0.0" />
+  </joint>
+  <link
+    name="verticaltail">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0001"
+        ixz="0.0001"
+        iyy="0.0001"
+        iyz="-0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/verticaltail.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/verticaltail.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="frame2verticaltail"
+    type="fixed">
+    <origin
+      xyz="0.000999377403465118 -0.0159687583989936 -1.17551568300135"
+      rpy="1.57065167907709 1.57079631189374 3.01523037077541" />
+    <parent
+      link="frame" />
+    <child
+      link="verticaltail" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="rudderL">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0001"
+        ixz="0.0001"
+        iyy="0.0001"
+        iyz="-0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/rudderL.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/rudderL.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="verticaltail2rudderL"
+    type="revolute">
+    <origin
+      xyz="0.093825 -1.267 0.055"
+      rpy="3.1416 0 0.021456" />
+    <parent
+      link="verticaltail" />
+    <child
+      link="rudderL" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-0.5236"
+      upper="0.5236"
+      effort="100000"
+      velocity="100000" />
+    <dynamics
+      damping="0.001"
+      friction="0.001" />
+  </joint>
+  <link
+    name="rudderR">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0001"
+        ixz="0.0001"
+        iyy="0.0001"
+        iyz="-0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/rudderR.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/rudderR.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="verticaltail2rudderR"
+    type="revolute">
+    <origin
+      xyz="0.093825 0.0030039 0.055"
+      rpy="3.1416 0 -0.048369" />
+    <parent
+      link="verticaltail" />
+    <child
+      link="rudderR" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-0.5236"
+      upper="0.5236"
+      effort="100000"
+      velocity="100000" />
+    <dynamics
+      damping="0.001"
+      friction="0.001" />
+  </joint>
+  <link
+    name="horizontalTail">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0001"
+        ixz="0.0001"
+        iyy="0.0001"
+        iyz="-0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/horizontalTail.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/horizontalTail.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="verticaltail2horizontalTail"
+    type="fixed">
+    <origin
+      xyz="0 -0.03 0.467"
+      rpy="1.5708 0 0" />
+    <parent
+      link="verticaltail" />
+    <child
+      link="horizontalTail" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="elevator">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0001"
+        ixz="0.0001"
+        iyy="0.0001"
+        iyz="-0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/elevator.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/elevator.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="horizontalTail2elevator"
+    type="revolute">
+    <origin
+      xyz="0.093825 0.0030039 0.055"
+      rpy="0 0 0" />
+    <parent
+      link="horizontalTail" />
+    <child
+      link="elevator" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-0.5236"
+      upper="0.5236"
+      effort="100000"
+      velocity="100000" />
+    <dynamics
+      damping="0.001"
+      friction="0.001" />
+  </joint>
+  <link
+    name="dc_motor_fixed_wing">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0001"
+        ixz="0.0001"
+        iyy="0.0001"
+        iyz="-0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/dc_motor_fixed_wing.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/dc_motor_fixed_wing.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="body2motor"
+    type="fixed">
+    <origin
+      xyz="-0.5958 0 0.2"
+      rpy="0 -1.5702 1.5708" />
+    <parent
+      link="body" />
+    <child
+      link="dc_motor_fixed_wing" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="fixed_wing_propeller">
+    <inertial>
+      <origin
+        xyz="-0.025 0.00011537 0.30483"
+        rpy="0 0 0" />
+      <mass
+        value="0.0001" />
+      <inertia
+        ixx="0.0001"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="0.0"
+        iyz="0.0001"
+        izz="0.0001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/fixed_wing_propeller.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://ciconia_gazebo/meshes/fixed_wing_propeller.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="motor2fwprop"
+    type="continuous">
+    <origin
+      xyz="0 0.01 0"
+      rpy="-3.1416 0.12532 -3.1416" />
+    <parent
+      link="dc_motor_fixed_wing" />
+    <child
+      link="fixed_wing_propeller" />
+    <axis
+      xyz="0 1 0" />
+    <dynamics damping="0.0" friction="0.0"/>
+  </joint>
+  
+  <link name="hokuyo_link">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 1.570796 0"/>
+      <geometry>
+        <box size="0.0 0.0 0.0"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 1.570796 0"/>
+      <geometry>
+        <box size="0.015 0.015 0.015"/>
+      </geometry>
+    </visual>
+
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
+  
+  <joint name="hokuyo_joint" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin xyz="0 0 0" rpy="0 1.570796 0"/>
+    <parent link="body"/>
+    <child link="hokuyo_link"/>
+  </joint>
+  
+  
+  
+</robot>
