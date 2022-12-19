@@ -98,8 +98,8 @@ class models:
         Fp, Mp = self.calculate_propulsive_forces_and_moments_trim(u, mach) 
         Mg     = self.gyro.gyroscopic_moment(rates, self.prop_set)
         Fg     = self.grav.gravitational_forces(euler_angles)
-        #return Fa + Fp + Fg , Ma + Mg + Mp 
-        return Fa + Fp + Fg , Ma + Mp 
+        return Fa + Fp + Fg , Ma + Mg + Mp 
+
     
     
     def calculate_trimmed_throttle(self, euler_angles, wind_param, rates, cont_surf, u):
@@ -108,5 +108,5 @@ class models:
         Fp, Mp = self.calculate_propulsive_forces_and_moments_trim(u, mach) 
         Mg     = self.gyro.gyroscopic_moment(rates, self.prop_set)
         Fg     = self.grav.gravitational_forces(euler_angles)
-        #return Fa + Fp + Fg , Ma + Mg + Mp 
-        return Fa + Fp + Fg , Ma + Mp 
+        return Fa + Fp + Fg , Ma + Mg + Mp 
+
