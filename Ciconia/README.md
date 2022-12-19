@@ -1,3 +1,3 @@
 # Ciconia
 
-Gazebo Simulations and ROS Packages for a hybrid aerial vehicle.
+Gazebo simulations and ROS Packages for a hybrid aerial vehicle.
