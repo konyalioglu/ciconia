@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   gazebo_msgs
+  mavros_msgs
 )
 find_package(gazebo REQUIRED)
 
@@ -22,6 +23,7 @@ catkin_package(CATKIN_DEPENDS
   std_msgs
   geometry_msgs
   gazebo_msgs
+  mavros_msgs
 )
 
 

@@ -1,0 +1,14 @@
+filter_rate: 100
+
+barometer_topic: '/mavros/imu/static_pressure'
+rangefinder_topic: '/mavros/rangefinder/rangefinder'
+state_publisher_topic: '/alt_est/states'
+cov_publisher_topic: '/alt_est/cov'
+
+pose_topic: '/mavros/global_position/local'
+
+process_var: 1
+barometer_var: 0.016
+rangefinder_var: 0.0012
+
+P0: 101325

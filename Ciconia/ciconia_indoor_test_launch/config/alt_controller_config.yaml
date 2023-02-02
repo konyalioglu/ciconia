@@ -1,0 +1,3 @@
+controller_rate: 100
+controller_type: 'PID'
+#controller_type: 'MPC'

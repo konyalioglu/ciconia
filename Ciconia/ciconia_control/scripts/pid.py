@@ -18,9 +18,9 @@ class pid:
     def calculate_control_input(self, ref, feedback, dt):
         error           = ref - feedback
         self.error_sum += (error + self.error_prev) / 2 * dt
-        error_rate      = (self.error - self.error_prev) / dt
+        error_rate      = (error - self.error_prev) / dt
         if self.anti_windup != None:
-            self.error_sum  = self.integral_anti_windup(self.error_sum)
+            self.error_sum  = self.integral_anti_windup(self.error_sum * self.ki)
         self.error_prev = error
 
         signal =  error * self.kp + self.error_sum * self.ki + error_rate * self.kd
@@ -33,7 +33,7 @@ class pid:
         elif integral_error < -self.anti_windup:
            return -self.anti_windup
         else:
-           return integral_error
+           return integral_error / self.ki
 
 
     def check_constraints(self, signal):

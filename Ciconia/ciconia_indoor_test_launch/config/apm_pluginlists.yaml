@@ -1,0 +1,34 @@
+plugin_blacklist:
+# common
+# actuator_control
+- ftp
+- safety_area
+- hil
+# extras
+# altitude
+- debug_value
+- image_pub
+- px4flow
+- vibration
+- vision_speed_estimate
+- wheel_odometry
+- waypoint
+- vision_speed_estimate
+- wheel_odometry
+- vfr_hud
+- trajectory
+- terrain
+- guided_target
+- camera
+- home_position
+- distance_sensor
+#- rangefinder
+
+#controller
+#- guided_target
+#- setpoint_velocity
+#- setpoint_position
+#- setpoint_raw
+#- setpoint_attitude
+
+plugin_whitelist: []

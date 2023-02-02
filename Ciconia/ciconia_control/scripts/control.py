@@ -469,7 +469,6 @@ class controller:
         nano_seconds = data.clock.nsecs
 
         self.sim_time = seconds + nano_seconds / 1000000000
-        #print(self.sim_time)
         return
 
 
@@ -885,7 +884,6 @@ class controller:
         
         
     def transition_actuator_input(self, u, states):
-        
         de_trimmed = self.tr_trimmed_control_inputs[0,0]
         dt_trimmed = self.tr_trimmed_control_inputs[1,0]
         up_trimmed = self.tr_trimmed_control_inputs[3,0]
@@ -1045,37 +1043,27 @@ class controller:
         
         
     def lqr_quad_mode(self, ref_s_vector, states):
-        #ref_s_vector   = np.array([[ref_x],[0],[ref_y],[0],[ref_z],[0],[0],[0],[0],[0],[ref_yaw],[0]]).reshape(12,1)
-        #ref_vector   = np.array([[ref_z],[ref_y],[ref_x],[ref_yaw]])
         u = -self.Kd_quad @ (states - ref_s_vector)
         self.quadrotor_actuator_input(u)
         return
 
 
     def lqr_transition_mode(self, ref_s_vector, states):
-        #ref_s_vector   = np.array([[ref_u],[0],[0],[0],[ref_z],[0],[0],[0],[ref_phi],[ref_psi]]).reshape(10,1)
         xk = states - self.tr_trimmed_states
         u = -self.Kd_tran @ (xk - ref_s_vector)
-        #print(xk - ref_s_vector)
         self.transition_actuator_input(u, states)
         return
 
 
     def lqr_flight_mode(self, ref_s_vector, states):
-        #ref_s_vector   = np.array([[ref_u],[0],[0],[0],[ref_z],[0],[0],[0],[ref_phi],[ref_psi]]).reshape(10,1)
         x = states - self.ff_trimmed_states
-        #print('states: ', x)
         u = -self.Kd_flight @ (x - ref_s_vector)  
-        #print('inputs: ', u)
         self.flight_actuator_input(u)
         return
     
     
     def uMPC_Quadrotor_Initialization(self, dt):
         A_flight, B_flight, C_flight, D_flight = self.get_quadrotor_dynamics()
-        
-        # Q = np.diag(np.array([2, 2, 5, 10, 2, 1, 5, 5, 2, 1]))
-        # R = np.diag(np.array([20, 1, 20, 20]))
         Q = np.diag(np.array([20, 100, 20, 100, 20, 50, 100, 200, 100, 200, 200, 100]))
         R = np.diag(np.array([1, 5, 5, 1]))
         Np = 90
@@ -1088,8 +1076,6 @@ class controller:
     
     
     def uMPC_Quadrotor_mode(self, ref_s_vector, xk):
-        #ref_s_vector   = np.array([[ref_x],[0],[ref_y],[0],[ref_z],[0],[0],[0],[0],[0],[ref_psi],[0]]).reshape(12,1)
-
         u = self.umpc_quadrotor.calculate_mpc_unconstraint_input(xk - ref_s_vector)
         print(u)
         self.quadrotor_actuator_input(u)
@@ -1114,19 +1100,14 @@ class controller:
     
     
     def uMPC_Quadrotor_mode2(self, ref_s_vector, states, dt = 0):
-        #print(states[4:,0])
         xk = states[4:,0].reshape(8,1)
         u = self.umpc_quadrotor2.calculate_mpc_unconstraint_input(xk - ref_s_vector)
-        #print(u)
         self.quadrotor_actuator_input(u, dt)
         return
     
     
     def uMPC_Transition_Initialization(self, dt):
         A_flight, B_flight, C_flight, D_flight = self.get_transition_dynamics()
-        
-        # Q = np.diag(np.array([2, 2, 5, 10, 2, 1, 5, 5, 2, 1]))
-        # R = np.diag(np.array([20, 1, 20, 20]))
         Q = np.diag(np.array([5, 2, 10, 5, 5, 1, 10, 1, 5, 1]))
         R = np.diag(np.array([100, 1, 1, 10, 100, 100, 10, 100]))
         Np = 90
@@ -1148,9 +1129,6 @@ class controller:
     
     def uMPC_Flight_Initialization(self, dt):
         A_flight, B_flight, C_flight, D_flight = self.get_flight_dynamics()
-        
-        # Q = np.diag(np.array([2, 2, 5, 10, 2, 1, 5, 5, 2, 1]))
-        # R = np.diag(np.array([20, 1, 20, 20]))
         Q = np.diag(np.array([5, 2, 10, 5, 5, 1, 5, 2, 2, 5]))
         R = np.diag(np.array([100, 1, 100, 100]))
         Np = 45
@@ -1182,8 +1160,6 @@ class controller:
         deltau_maxs = np.array([[0.01],[10],[0.1],[0.1]])
         deltau_cons =  np.concatenate((deltau_mins, deltau_maxs), axis=0)
         
-        # Q = np.diag(np.array([5, 2, 10, 5, 5, 1, 5, 2, 2, 5]))
-        # R = np.diag(np.array([20, 0.01, 20, 20]))
         Q = np.diag(np.array([5, 2, 10, 5, 5, 1, 5, 2, 2, 5]))
         R = np.diag(np.array([100, 1, 100, 100]))
         P = np.diag(np.array([5, 2, 10, 5, 5, 1, 5, 2, 2, 5]))*100
@@ -1194,7 +1170,6 @@ class controller:
         self.cmpc_flight.define_terminal_cost(P)
         self.cmpc_flight.initialize_model_contraints(x_cons, u_cons, deltau_cons)
         self.cmpc_flight.initialize_mpc_controller()
-        #self.cmpc_flight.initialize_infinite_horizon()
         print('__________________________________________________________ \n','Flight Mode Initialization: \n')
         return
     
@@ -1307,25 +1282,19 @@ class controller:
         
         P = sparse.block_diag([sparse.kron(sparse.eye(N), Q), QN,
                        sparse.kron(sparse.eye(N), R)], format='csc')
-        # - linear objective
         q = np.hstack([np.kron(np.ones(N), -Q.dot(xr)), -QN.dot(xr),
                        np.zeros(N*nu)])
-        # - linear dynamics
         Ax = sparse.kron(sparse.eye(N+1),-sparse.eye(nx)) + sparse.kron(sparse.eye(N+1, k=-1), Ad)
         Bu = sparse.kron(sparse.vstack([sparse.csc_matrix((1, N)), sparse.eye(N)]), Bd)
         Aeq = sparse.hstack([Ax, Bu])
         leq = np.hstack([-x0, np.zeros(N*nx)])
         ueq = leq
-        # - input and state constraints
         Aineq = sparse.eye((N+1)*nx + N*nu)
         lineq = np.hstack([np.kron(np.ones(N+1), xmin), np.kron(np.ones(N), umin)])
         uineq = np.hstack([np.kron(np.ones(N+1), xmax), np.kron(np.ones(N), umax)])
-        # - OSQP constraints
         A = sparse.vstack([Aeq, Aineq], format='csc')
         self.lc = np.hstack([leq, lineq])
         self.uc = np.hstack([ueq, uineq])
-        
-        # Create an OSQP object
         self.prob = osqp.OSQP()
         
         self.prob.setup(P, q, A, self.lc, self.uc, warm_start=True)
@@ -1333,20 +1302,16 @@ class controller:
     
     
     def osqp_linear_constraint_mpc(self, xk):
-        # Solve
         res = self.prob.solve()
-    
-        # Check solver status
+
         if res.info.status != 'solved':
             raise ValueError('OSQP did not solve the problem!')
     
-        # Apply first control input to the plant
         ctrl = res.x[-self.N*self.nu:-(self.N-1)*self.nu]
         self.flight_actuator_input(ctrl.reshape(4,1))
         print(ctrl)
         xk = xk - self.ff_trimmed_states
         x0 = xk.reshape(10,)
-        # Update initial state
         self.lc[:self.nx] = -x0
         self.uc[:self.nx] = -x0
         self.prob.update(l=self.lc, u=self.uc)
@@ -1413,7 +1378,6 @@ class controller:
         Returns
         -------
         None.
-
         '''
         
         if self.transition_bool == True:

@@ -17,7 +17,8 @@
   <build_depend>geometry_msgs</build_depend>
   <build_depend>ros-noetic-gazebo-ros-control</build_depend>
   <build_depend>gazebo_msgs</build_depend>
-  <build_depend>gazebo_msgs</build_depend>
+  <build_depend>mavros_msgs</build_depend>
+  <build_depend>ciconia_msgs</build_depend>
   
   
   <build_export_depend>rospy</build_export_depend>
@@ -30,6 +31,7 @@
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>gazebo_msgs</exec_depend>
-
+  <exec_depend>mavros_msgs</exec_depend>
+  <exec_depend>ciconia_msgs</exec_depend>
 
 </package>
