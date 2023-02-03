@@ -11,8 +11,6 @@ find_package(catkin REQUIRED COMPONENTS
   mavros_msgs
   ciconia_msgs
 )
-find_package(gazebo REQUIRED)
-
 
 
 catkin_python_setup()

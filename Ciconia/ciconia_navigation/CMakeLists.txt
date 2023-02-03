@@ -9,8 +9,6 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
 )
-find_package(gazebo REQUIRED)
-
 
 
 catkin_python_setup()
