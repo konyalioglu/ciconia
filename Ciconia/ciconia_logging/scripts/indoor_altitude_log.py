@@ -63,3 +63,7 @@ if __name__ == '__main__':
     rospy.spin()
 
 
+python3-pykdl
+control_msgs
+angles
+geographic_msgs
