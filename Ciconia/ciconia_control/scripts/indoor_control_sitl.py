@@ -14,7 +14,7 @@ from mavros_msgs.srv import CommandBool, SetMode
 
 from utils import *
 from pid import pid
-
+from model_predictive_controller import Model_Predictive_Control
 
 
 
@@ -57,12 +57,41 @@ class indoorController:
 
         self.set_attitude.type_mask =  self.set_attitude.IGNORE_ROLL_RATE + self.set_attitude.IGNORE_PITCH_RATE + self.set_attitude.IGNORE_YAW_RATE + self.set_attitude.IGNORE_ATTITUDE
 
+        ##Ros 
+        self._namespace = rospy.get_namespace()
+        self._node_name = 'altControllerNode'       
+        self.initialize_model()
+
         #Controller Parameters
         self.position_controller = pid(1.5, 0.0, 0.0)
         self.velocity_controller = pid(15.0, 0.0, 0.0)
-        self.acceleration_controller = pid(0.8, 0.1, 0.01, output_constraints = [-90, -5], anti_windup = 80)
+        self.acceleration_controller = pid(0.8, 0.1, 0.01, output_constraints = [-90, 0], anti_windup = 80)
         self.ref_alt = 0.3
-        #self.throttle_rate = 5
+
+
+        self.A_alt = np.array([[0, 1],[0, 0]])
+        self.B_alt = np.array([[0],[1]])
+        self.C_alt = np.array([[1, 0],[0, 1]])
+        Np = 40
+        Nc = 4
+        Q  = np.array([2, 20])
+        R  = np.array([0.1])
+
+        x_mins = -np.array([[10],[10]])
+        x_maxs = np.array([[10],[10]])
+        x_cons =  np.concatenate((x_mins, x_maxs), axis=0)
+        u_mins = -np.array([[10]])
+        u_maxs = np.array([[10]])
+        u_cons =  np.concatenate((u_mins, u_maxs), axis=0)
+        deltau_mins = -np.array([[0.1]])
+        deltau_maxs = np.array([[0.1]])
+        deltau_cons =  np.concatenate((deltau_mins, deltau_maxs), axis=0)
+
+        self.inner_acc_controller = pid(0.8, 0.1, 0.01, output_constraints = [-90, 90], anti_windup = 80)
+        self.mpc_alt = Model_Predictive_Control(self.A_alt, self.B_alt, self.C_alt, Np, Nc, Q, R, 1/self.controller_rate, 'Regulator')
+        self.mpc_alt.initialize_model_contraints(x_cons, u_cons, deltau_cons)
+        self.mpc_alt.initialize_mpc_controller()
+        self.mpc_alt.unconstrained_mpc_gain()
 
         #Global Variables
         self.g = 9.81
@@ -85,10 +114,6 @@ class indoorController:
         self.vel_data_on = False
         self.pos_data_on = False
 
-        ##Ros 
-        self._namespace = rospy.get_namespace()
-        self._node_name = 'altControllerNode'       
-        self.initialize_model()
 
         #Initialization
         rospy.init_node(self._node_name)
@@ -165,16 +190,28 @@ class indoorController:
     def _timer(self, event):
 
         if self.is_armed and self.mode == 'GUIDED_NOGPS' and self.vel_data_on and self.pos_data_on:
-            vz_signal = self.position_controller.calculate_control_input(-self.ref_alt + self.home_z, self.z, 1/self.controller_rate)
-            az_signal = self.velocity_controller.calculate_control_input(vz_signal, self.z_dot, 1/self.controller_rate)
-            throttle = self.acceleration_controller.calculate_control_input(az_signal, self.az, 1/self.controller_rate)
+            if self.controller_type == 'PID':
+                vz_signal = self.position_controller.calculate_control_input(-self.ref_alt + self.home_z, self.z, 1/self.controller_rate)
+                az_signal = self.velocity_controller.calculate_control_input(vz_signal, self.z_dot, 1/self.controller_rate)
+                throttle = self.acceleration_controller.calculate_control_input(az_signal, self.az, 1/self.controller_rate)
+                self.set_attitude.thrust = (-throttle + 34.6) / 100
+                self._set_attitude_pub.publish(self.set_attitude)
 
-            print('Throttle: ' + str(throttle) + '   az: ' + str(self.az) + '   zdot: ' + str(self.z_dot) + '   z: ' + str(self.z - self.home_z))
+            elif self.controller_type == 'MPC':
+                xk = np.array([[self.z],[self.z_dot]])
+                ref_s_vector = np.array([[-self.ref_alt + self.home_z],[0]])
 
-            #self.set_attitude.thrust = (-throttle + 34.6) / 100
-            self.set_attitude.thrust = (-throttle) / 100
-            self._set_attitude_pub.publish(self.set_attitude)
+                #u = self.mpc_alt.calculate_mpc_unconstraint_input(xk - ref_s_vector)
 
+                u = self.mpc_alt.calculate_control_input(xk - ref_s_vector, option = 'Hildreth')
+                throttle = self.inner_acc_controller.calculate_control_input(-u[0,0], self.az, 1/self.controller_rate)
+                print('x: ' + str(xk) + '    ref: ' + str(ref_s_vector) + '    diff: ' + str(xk - ref_s_vector))
+
+                print('Throttle: ' + str(throttle) + '    umpc_a: ' + str(u[0,0]) + '   az: ' + str(self.az) + '   zdot: ' + str(self.z_dot) + '   z: ' + str(self.z - self.home_z))
+
+                self.set_attitude.thrust = (throttle + 34.0) / 100
+                #self.set_attitude.thrust = (throttle) / 100
+                self._set_attitude_pub.publish(self.set_attitude)
 
         
     def _rc_out_handler(self, msg):

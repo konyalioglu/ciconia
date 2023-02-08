@@ -11,10 +11,11 @@ from sensor_msgs.msg import Imu
 from std_msgs.msg import Float64MultiArray
 from mavros_msgs.msg import RCOut, State, PositionTarget, AttitudeTarget, RCIn
 from mavros_msgs.srv import CommandBool, SetMode
-from ciconia_msgs.msg import altPIDControl
+from ciconia_msgs.msg import altPIDControl, altMPCControl
 
 from utils import *
 from pid import pid
+from model_predictive_controller import Model_Predictive_Control
 
 
 
@@ -49,6 +50,7 @@ class indoorController:
         self.set_point = PositionTarget()
         self.set_attitude = AttitudeTarget()
         self.pid_data = altPIDControl()
+        self.mpc_data = altMPCControl()
 
         self.set_point.coordinate_frame = self.set_point.FRAME_BODY_NED
         self.set_point.type_mask  = self.set_point.IGNORE_PX + self.set_point.IGNORE_PY + self.set_point.IGNORE_PZ 
@@ -58,6 +60,10 @@ class indoorController:
 
         self.set_attitude.type_mask =  self.set_attitude.IGNORE_ROLL_RATE + self.set_attitude.IGNORE_PITCH_RATE + self.set_attitude.IGNORE_YAW_RATE + self.set_attitude.IGNORE_ATTITUDE
 
+        ##Ros 
+        self._namespace = rospy.get_namespace()
+        self._node_name = 'altControllerNode'       
+        self.initialize_model()
 
         #Global Variables
         self.g = 9.81
@@ -102,15 +108,15 @@ class indoorController:
 
         self.position_controller = pid(self.pos_kp, self.pos_ki, self.pos_kd)
         self.velocity_controller = pid(self.vel_kp, self.vel_ki, self.vel_kd, anti_windup = 0.2)
-        self.acceleration_controller = pid(self.acc_kp, self.acc_ki, self.acc_kd, output_constraints = [-95, -5], anti_windup = 80)
+        self.acceleration_controller = pid(self.acc_kp, self.acc_ki, self.acc_kd, output_constraints = [-95, 95], anti_windup = 95)
 
         self.ref_alt = 0.3
 
-        self.pid_data.alt_to_vel_p = self.acc_kp
-        self.pid_data.alt_to_vel_i = self.acc_ki
-        self.pid_data.alt_to_vel_d = self.acc_kd
+        self.pid_data.alt_to_vel_p = self.pos_kp
+        self.pid_data.alt_to_vel_i = self.pos_ki
+        self.pid_data.alt_to_vel_d = self.pos_kd
 
-        self.pid_data.vel_to_acc_p = self.acc_kp
+        self.pid_data.vel_to_acc_p = self.vel_kp
         self.pid_data.vel_to_acc_i = self.acc_ki
         self.pid_data.vel_to_acc_d = self.acc_kd
 
@@ -118,10 +124,54 @@ class indoorController:
         self.pid_data.acc_to_thrust_i = self.acc_ki
         self.pid_data.acc_to_thrust_d = self.acc_kd
 
-        ##Ros 
-        self._namespace = rospy.get_namespace()
-        self._node_name = 'altControllerNode'       
-        self.initialize_model()
+        self.mpc_data.acc_to_thrust_p = self.acc_kp
+        self.mpc_data.acc_to_thrust_i = self.acc_ki
+        self.mpc_data.acc_to_thrust_d = self.acc_kd
+
+        self.A_alt = np.array([[0, 1],[0, 0]])
+        self.B_alt = np.array([[0],[1]])
+        self.C_alt = np.array([[1, 0],[0, 1]])
+
+        Np = 40
+        Nc = 4
+        Q  = np.array([2, 20])
+        R  = np.array([0.1])
+
+        x_mins = -np.array([[10],[10]])
+        x_maxs = np.array([[10],[10]])
+        x_cons =  np.concatenate((x_mins, x_maxs), axis=0)
+        u_mins = -np.array([[10]])
+        u_maxs = np.array([[10]])
+        u_cons =  np.concatenate((u_mins, u_maxs), axis=0)
+        deltau_mins = -np.array([[0.1]])
+        deltau_maxs = np.array([[0.1]])
+        deltau_cons =  np.concatenate((deltau_mins, deltau_maxs), axis=0)
+
+        self.inner_acc_controller = pid(0.8, 0.1, 0.01, output_constraints = [-90, 90], anti_windup = 90)
+        self.mpc_alt = Model_Predictive_Control(self.A_alt, self.B_alt, self.C_alt, Np, Nc, Q, R, 1/self.controller_rate, 'Regulator')
+        self.mpc_alt.initialize_model_contraints(x_cons, u_cons, deltau_cons)
+        self.mpc_alt.initialize_mpc_controller()
+        self.mpc_alt.unconstrained_mpc_gain()
+
+        self.mpc_data.acc_to_thrust_p = self.acc_kp
+        self.mpc_data.acc_to_thrust_i = self.acc_ki
+        self.mpc_data.acc_to_thrust_d = self.acc_kd
+
+        self.mpc_data.Np = Np
+        self.mpc_data.Nc = Nc
+
+        self.mpc_data.Q_Z = Q[0]
+        self.mpc_data.Q_ZDOT = Q[1]
+        self.mpc_data.R = R[0]
+
+        self.mpc_data.const_z_min = x_mins[0]
+        self.mpc_data.const_z_max = x_maxs[0]
+        self.mpc_data.const_dz_min = x_mins[1]
+        self.mpc_data.const_dz_max = x_maxs[1]
+        self.mpc_data.const_u_min = u_mins[0]
+        self.mpc_data.const_u_max = u_maxs[0]
+        self.mpc_data.const_du_min = deltau_mins[0]
+        self.mpc_data.const_du_max = deltau_maxs[0]
 
         #Initialization
         rospy.init_node(self._node_name)
@@ -137,6 +187,8 @@ class indoorController:
         self._set_local_pub = rospy.Publisher('/mavros/setpoint_raw/local', PositionTarget, queue_size=5)
         self._set_attitude_pub = rospy.Publisher('/mavros/setpoint_raw/attitude', AttitudeTarget, queue_size=5)  
         self._set_pid_data_pub = rospy.Publisher('/pid/data', altPIDControl, queue_size=5)  
+        self._set_mpc_data_pub = rospy.Publisher('/mpc/data', altMPCControl, queue_size=5)  
+
 
         self._timer = rospy.Timer(rospy.Duration(1/self.controller_rate), self._timer)   
 
@@ -188,7 +240,9 @@ class indoorController:
             self.home_z = self.z
 
         if self.is_armed and self.mode == 'GUIDED_NOGPS' and self.init_home and self.init_throttle:
+
             if self.controller_type == 'PID':
+
                 vz_signal = self.position_controller.calculate_control_input(-self.ref_alt + self.home_z, self.z, 1/self.controller_rate)
                 az_signal = self.velocity_controller.calculate_control_input(vz_signal, self.z_dot, 1/self.controller_rate)
                 throttle = self.acceleration_controller.calculate_control_input(az_signal, self.az, 1/self.controller_rate)
@@ -211,6 +265,34 @@ class indoorController:
 
                 self._set_pid_data_pub.publish(self.pid_data)
                 print('Throttle: ' + str(self.set_attitude.thrust) + '   az: ' + str(self.az) + '   zdot: ' + str(self.z_dot) + '   z: ' + str(self.z - self.home_z))
+             
+
+            elif self.controller_type == 'MPC':
+
+                xk = np.array([[self.z],[self.z_dot]])
+                ref_s_vector = np.array([[-self.ref_alt + self.home_z],[0]])
+
+                #u = self.mpc_alt.calculate_mpc_unconstraint_input(xk - ref_s_vector)
+
+                u = self.mpc_alt.calculate_control_input(xk - ref_s_vector, option = 'Hildreth')
+                throttle = self.inner_acc_controller.calculate_control_input(-u[0,0], self.az, 1/self.controller_rate)
+
+                self.set_attitude.thrust = (throttle + self.throttle_ref) / 100
+                self._set_attitude_pub.publish(self.set_attitude)
+
+                self.mpc_data.reference_altitude = -self.ref_alt
+                self.mpc_data.altitude = self.z
+                self.mpc_data.home_altitude = self.home_z
+
+                self.mpc_data.acceleration_signal = -u[0,0]
+                self.mpc_data.acceleration = self.az
+
+                self.mpc_data.throttle = (throttle + self.throttle_ref) / 100
+                self.mpc_data.reference_throttle = self.throttle_ref
+
+                print('Throttle: ' + str(self.set_attitude.thrust) + '   az: ' + str(self.az) + '   zdot: ' + str(self.z_dot) + '   z: ' + str(self.z - self.home_z))
+
+
 
 
     def _rc_out_handler(self, msg):
@@ -226,12 +308,13 @@ class indoorController:
 
 
     def _rc_in_handler(self, msg):
-        self.set_point_settling = msg.channels[5]
-        self.throttle = (msg.channels[2] - 1000) / 10
-        if self.set_point_settling < 1300:
-            self.ref_alt = 0.3
-        elif self.set_point_settling > 1300 and self.set_point_settling < 1700:
-            self.ref_alt = 0.0
+        if len(msg.channels) > 4:
+            self.set_point_settling = msg.channels[5]
+            self.throttle = (msg.channels[2] - 1000) / 10
+            if self.set_point_settling < 1300:
+                self.ref_alt = 0.3
+            elif self.set_point_settling > 1300 and self.set_point_settling < 1700:
+                self.ref_alt = 0.0
         
         #print('Throttle: ' + str(self.throttle) + '   az: ' + str(self.ref_alt))
 

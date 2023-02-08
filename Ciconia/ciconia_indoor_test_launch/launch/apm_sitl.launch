@@ -28,5 +28,7 @@
 
     <rosparam command="load" file="$(find ciconia_indoor_test_launch)/config/alt_controller_config.yaml"/>
     <node name="alt_controller" pkg="ciconia_control" type="indoor_control_sitl.py" output="screen"/>  
+
+	<node name="alt_logger" pkg="ciconia_logging" type="indoor_altitude_log.py" output="screen"/>  
 	
 </launch>

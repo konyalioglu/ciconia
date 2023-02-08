@@ -20,6 +20,7 @@ add_message_files(
   flightControl.msg
   estimatedStates.msg
   altPIDControl.msg
+  altMPCControl.msg
 )
 
 
