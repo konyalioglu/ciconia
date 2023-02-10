@@ -1,0 +1,34 @@
+<launch>
+
+	<arg name="fcu_url" default="/dev/ttyACM0:57600" />
+	<arg name="gcs_url" default="" />
+	<arg name="tgt_system" default="1" />
+	<arg name="tgt_component" default="1" />
+	<arg name="log_output" default="screen" />
+	<arg name="fcu_protocol" default="v2.0" />
+	<arg name="respawn_mavros" default="true" />
+
+	<include file="$(find mavros)/launch/node.launch">
+		<arg name="pluginlists_yaml" value="$(find ciconia_indoor_test_launch)/config/apm_pluginlists.yaml" />
+		<arg name="config_yaml" value="$(find ciconia_indoor_test_launch)/config/apm_config.yaml" />
+
+		<arg name="fcu_url" value="$(arg fcu_url)" />
+		<arg name="gcs_url" value="$(arg gcs_url)" />
+		<arg name="tgt_system" value="$(arg tgt_system)" />
+		<arg name="tgt_component" value="$(arg tgt_component)" />
+		<arg name="log_output" value="$(arg log_output)" />
+		<arg name="fcu_protocol" value="$(arg fcu_protocol)" />
+		<arg name="respawn_mavros" value="$(arg respawn_mavros)" />
+	</include>
+  
+  <rosparam command="load" file="$(find ciconia_indoor_test_launch)/config/alt_estimation_config.yaml"/>
+  <node name="alt_estimation" pkg="ciconia_navigation" type="alt_estimation_node2.py" output="screen"/>  
+
+  <rosparam command="load" file="$(find ciconia_indoor_test_launch)/config/alt_controller_config.yaml"/>
+  <node name="alt_controller" pkg="ciconia_control" type="indoor_control2.py" output="screen"/>  
+  
+  
+  <node name="alt_logger" pkg="ciconia_logging" type="indoor_altitude_log2.py" output="screen"/>  
+  
+  
+</launch>

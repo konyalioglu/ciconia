@@ -360,6 +360,7 @@ class indoorController:
     def _estimator_handler(self, msg):
         self.z = -msg.data[0]
         self.z_dot = -msg.data[1]
+        print('dzz: ' + str(-msg.data[2]) + '  dzz_unbiased: ' + str(-msg.data[2]+msg.data[4]))
 
 
 
