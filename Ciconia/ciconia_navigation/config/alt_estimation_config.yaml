@@ -11,4 +11,6 @@ process_var: 1
 barometer_var: 0.016
 rangefinder_var: 0.0012
 
+y_trim_offset: 0.05645018
+
 P0: 101325

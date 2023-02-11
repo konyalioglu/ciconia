@@ -5,11 +5,11 @@ class ALT_State_Estimation:
 
         def __init__(self, P0, gamma, var_r, var_b, var_a):
 
-            self.Ht_RNG = np.array([[1.0, 0.0, 0.0]])
+            self.Ht_RNG = np.array([[1.0, 0.0, 0.0, 0.0, 0.0]])
 
             self.Ht_BAR = np.array([[1.0, 0.0, 0.0, 1.0, 0.0]])
 
-            self.Ht_BAR = np.array([[0.0, 0.0, 1.0, 0.0, 1.0]])
+            self.Ht_ACC = np.array([[0.0, 0.0, 1.0, 0.0, 1.0]])
 
             self.xt = np.array([[0.0],[0.0],[0.0],[0.0],[0.0]])
             self.gamma = gamma

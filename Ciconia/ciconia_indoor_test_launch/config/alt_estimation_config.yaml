@@ -7,7 +7,7 @@ cov_publisher_topic: '/alt_est/cov'
 imu_publisher_topic: '/imu'
 
 pose_topic: '/mavros/global_position/local'
-imu_topic: '/mavros/global_position/local'
+imu_topic: '/mavros/imu/data'
 
 process_var: 0.1
 barometer_var: 0.1

@@ -20,6 +20,36 @@ def rotzE2B(angle):
     return np.array([[np.cos(angle), np.sin(angle)], [-np.sin(angle), np.cos(angle)]])
 
 
+def euler_transformation_x(phi, vector):
+    rotx = np.array([[1, 0, 0], [0, np.cos(phi), np.sin(phi)], [0, -np.sin(phi), np.cos(phi)]])
+    return rotx @ vector
+
+
+def euler_transformation_y(theta, vector):
+    roty = np.array([[np.cos(theta), 0, -np.sin(theta)], [0, 1, 0], [np.sin(theta), 0, np.cos(theta)]])
+    return roty @ vector
+
+
+def euler_transformation_z(psi, vector):
+    rotz = np.array([[np.cos(psi), np.sin(psi), 0], [-np.sin(psi), np.cos(psi), 0], [0, 0, 1]])
+    return rotz @ vector
+
+
+def euler_inverse_transformation_x(phi, vector):
+    rotx = np.array([[1, 0, 0], [0, np.cos(phi), -np.sin(phi)], [0, np.sin(phi), np.cos(phi)]])
+    return rotx @ vector
+
+
+def euler_inverse_transformation_y(theta, vector):
+    roty = np.array([[np.cos(theta), 0, np.sin(theta)], [0, 1, 0], [-np.sin(theta), 0, np.cos(theta)]])
+    return roty @ vector
+
+
+def euler_inverse_transformation_z(psi, vector):
+    rotz = np.array([[np.cos(psi), -np.sin(psi), 0], [np.sin(psi), np.cos(psi), 0], [0, 0, 1]])
+    return rotz @ vector
+
+
 def body2earth_transformation(angles, vector):
     rotx = np.array([[1, 0, 0], [0, np.cos(angles[0,0]), np.sin(angles[0,0])], [0, -np.sin(angles[0,0]), np.cos(angles[0,0])]])
     roty = np.array([[np.cos(angles[1,0]), 0, -np.sin(angles[1,0])], [0, 1, 0], [np.sin(angles[1,0]), 0, np.cos(angles[1,0])]])

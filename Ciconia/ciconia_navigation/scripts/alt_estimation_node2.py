@@ -24,6 +24,8 @@ class altEstimatorNode:
 
         self.P0 = 101325
 
+        self.y_trim_offset = 0.05645018
+
         self.barometer_var = 0.01
         self.barometer_data = Float64()
         self.barometer_topic = '/mavros/imu/static_pressure'
@@ -46,14 +48,19 @@ class altEstimatorNode:
         self.states = Float64MultiArray()
         self.cov = Float64MultiArray()
 
+        self.number_of_acc_samples = 200
+        self.acc_sample_counter = 0
+        self.sum_acc = 0
+        self.gravity_calibration = False
+
         #Global Variables
         self.phi = 0
         self.theta = 0
         self.psi = 0
 
-        ##Ros 
+        ##Ros
         self._namespace = rospy.get_namespace()
-        self._node_name = 'altEstimationNode'       
+        self._node_name = 'altEstimationNode'
         self.initialize_model()
 
         #Initialization
@@ -63,18 +70,18 @@ class altEstimatorNode:
         rospy.init_node(self._node_name)
 
         rospy.Subscriber(self.barometer_topic, FluidPressure, self._barometer_handler)
-        rospy.Subscriber(self.rangefinder_topic, Range, self._rangefinder_handler_)        
-        rospy.Subscriber(self.imu_topic, Imu, self._imu_handler)  
+        rospy.Subscriber(self.rangefinder_topic, Range, self._rangefinder_handler_)
+        rospy.Subscriber(self.imu_topic, Imu, self._imu_handler)
 
 
         self._alt_est_states = rospy.Publisher(self.state_publisher_topic, Float64MultiArray, queue_size=5)
         self._alt_est_cov = rospy.Publisher(self.cov_publisher_topic, Float64MultiArray, queue_size=5)
         self._alt_raw_barometer = rospy.Publisher(self.barometer_publisher_topic, Float64, queue_size=5)
         self._alt_raw_rangefinder = rospy.Publisher(self.rangefinder_publisher_topic, Float64, queue_size=5)   
-        self._imu_publisher = rospy.Publisher(self.imu_publisher_topic, Imu, queue_size=5)           
-        
-        self._timer = rospy.Timer(rospy.Duration(1/self.filter_rate), self._timer)   
-                
+        self._imu_publisher = rospy.Publisher(self.imu_publisher_topic, Imu, queue_size=5)
+
+        self._timer = rospy.Timer(rospy.Duration(1/self.filter_rate), self._timer)
+
 
 
     def get_param(self, param_name, default):
@@ -89,7 +96,7 @@ class altEstimatorNode:
 
     def initialize_model(self):
         self.filter_rate = self.get_param('/filter_rate', self.filter_rate)       
-        
+
         self.barometer_topic = self.get_param('/barometer_topic', self.barometer_topic)
 
         self.rangefinder_var = self.get_param('/rangefinder_var', self.rangefinder_var)
@@ -103,12 +110,14 @@ class altEstimatorNode:
         self.imu_publisher_topic = self.get_param('/imu_publisher_topic', self.imu_publisher_topic)
 
         self.imu_topic = self.get_param('/imu_topic', self.imu_topic)
-        
+
         self.process_var = self.get_param('/process_var', self.process_var)
 
         self.barometer_var = self.get_param('/barometer_var', self.barometer_var)  
 
-        self.accelerometer_var = self.get_param('/accelerometer_var', self.accelerometer_var)  
+        self.accelerometer_var = self.get_param('/accelerometer_var', self.accelerometer_var)
+
+        self.y_trim_offset = self.get_param('/y_trim_offset', self.y_trim_offset)    
 
         self.P0 = self.get_param('/P0', self.P0)
 
@@ -120,13 +129,13 @@ class altEstimatorNode:
         self._alt_est_states.publish(self.states)
         self._alt_est_cov.publish(self.cov)
 
-        
+
     def _barometer_handler(self, msg):
         pressure = msg.fluid_pressure
         altitude = np.array([[44330 * (1 - (pressure/self.P0)**(1/5.255))]])
         self.kf.BAR_Update(altitude)
         self.barometer_data.data = altitude
-        self.self._alt_raw_barometer.publish(self.barometer_data)
+        self._alt_raw_barometer.publish(self.barometer_data)
 
 
     def _rangefinder_handler_(self, msg):
@@ -137,30 +146,49 @@ class altEstimatorNode:
 
 
     def _imu_handler(self, msg):
-        if self.acc_sample_counter + 1 != self.number_of_acc_samples and self.gravity_calibration == False:
-            self.acc_sample_counter += 1
-            self.sum_acc += np.sqrt(msg.linear_acceleration.x ** 2 + msg.linear_acceleration.y ** 2 + msg.linear_acceleration.z ** 2)
+        if self.acc_sample_counter != self.number_of_acc_samples and self.gravity_calibration == False:
 
-        elif self.acc_sample_counter + 1 == self.number_of_acc_samples and self.gravity_calibration == False:
-            self.g = self.sum_acc / self.number_of_acc_samples
+            if np.abs(msg.linear_acceleration.x) > 0.001 or np.abs(msg.linear_acceleration.y) > 0.001 or np.abs(msg.linear_acceleration.z) > 0.001:
+                self.acc_sample_counter += 1
+                self.sum_acc += np.sqrt(msg.linear_acceleration.x ** 2 + msg.linear_acceleration.y ** 2 + msg.linear_acceleration.z ** 2)
+                g = np.sqrt(msg.linear_acceleration.x ** 2 + msg.linear_acceleration.y ** 2 + msg.linear_acceleration.z ** 2)
+                print('g: ' + str(g) + ' ax: ' +  str(msg.linear_acceleration.x)+' ay: ' + str(msg.linear_acceleration.y) + ' az: '+str(msg.linear_acceleration.z))
+
+
+        elif self.acc_sample_counter  == self.number_of_acc_samples and self.gravity_calibration == False:
+            self.g = self.sum_acc / (self.number_of_acc_samples)
             self.acc_sample_counter += 1
             self.gravity_calibration = True
 
         else:
-            qx = msg.orientation.x
-            qy = msg.orientation.y
-            qz = msg.orientation.z
-            qw = msg.orientation.w
+            qx =  msg.orientation.x
+            qy =  msg.orientation.y
+            qz =  msg.orientation.z
+            qw =  msg.orientation.w
             self.phi, self.theta, self.psi = quaternion_to_euler_angle(qw, qx, qy, qz)
-            gx, gy, gz = quaternion_to_gravity(qx, qy, qz, qw)
+            #gx, gy, gz = quaternion_to_gravity(qx, qy, qz, qw)
 
-            self.ax = -msg.linear_acceleration.x + gx * self.g
-            self.ay = -msg.linear_acceleration.y + gy * self.g
-            self.az = -msg.linear_acceleration.z + gz * self.g
+            self.theta = -self.theta
+            self.psi   = -self.psi
 
-            self.p = msg.angular_velocity.x
-            self.q = msg.angular_velocity.y
-            self.r = msg.angular_velocity.z
+            gx = -self.g * np.sin(self.theta)
+            gy =  self.g * np.cos(self.theta) * np.sin(self.phi)
+            gz =  self.g * np.cos(self.theta) * np.cos(self.phi)
+
+            accel_vector = euler_inverse_transformation_y(self.theta, np.array([[-msg.linear_acceleration.x],[msg.linear_acceleration.y],[msg.linear_acceleration.z]]))
+
+            self.ax = accel_vector[0,0] - gx
+            self.ay = accel_vector[1,0] - gy
+            self.az = accel_vector[2,0] - gz
+
+            #print('g: ' + str(self.g) + '  gc: ' + str(np.sqrt(msg.linear_acceleration.x ** 2 + msg.linear_acceleration.y ** 2 + msg.linear_acceleration.z ** 2)))
+            #print(' phi: ' + str(self.phi) + ' theta: ' + str(self.theta) + ' psi: ' + str(self.psi))
+            print('gx: ' + str(gx) + ' gy: ' + str(gy) + ' gz: '+str(gz))
+            print('ax: ' +  str(msg.linear_acceleration.x)+' ay: ' + str(msg.linear_acceleration.y) + ' az: '+str(msg.linear_acceleration.z))
+
+            self.p =  msg.angular_velocity.x
+            self.q = -msg.angular_velocity.y
+            self.r = -msg.angular_velocity.z
 
             self.kf.ACC_Update(-self.az)
 
@@ -180,7 +208,7 @@ if __name__ == '__main__':
     altEst = altEstimatorNode()
 
     rospy.loginfo('ALTITUDE ESTIMATOR HAS BEEN ACTIVATED')
-    
+
     rospy.spin()
 
 

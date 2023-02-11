@@ -18,17 +18,19 @@ class LogNode():
         self._namespace = rospy.get_namespace()
         self._node_name = 'altLogNode'       
 
+        self.time_ref = time.time()
+
         #Initialization
         rospy.init_node(self._node_name)
 
         rospy.Subscriber('/pid/data', altPIDControl, self._pid_data_handler) 
         rospy.Subscriber('/mpc/data', altMPCControl, self._mpc_data_handler)   
+        rospy.Subscriber('/alt_est/states', Float64MultiArray, self._altitude_estimator_data_handler)
         rospy.Subscriber('/barometer', Float64, self._barometer_data_handler)     
-        rospy.Subscriber('/rangefinder', Float64MultiArray, self._rangefinder_data_handler)     
+        rospy.Subscriber('/rangefinder', Float64, self._rangefinder_data_handler)     
         rospy.Subscriber('/imu', Imu, self._imu_data_handler)     
 
 
-        self.time_ref = time.time()
         current_dir = os.getcwd()
 
         self.dir = '/home/turan/ciconia/src/ciconia_logging/log'
@@ -50,7 +52,7 @@ class LogNode():
 
     def _altitude_estimator_data_handler(self, msg):
         timer = time.time() - self.time_ref
-        data = np.array([[timer, msg.data[0], msg.data[1]]])
+        data = np.array([[timer, msg.data[0], msg.data[1], msg.data[2]]])
         with open(self.alt_est_dir, 'a') as f:
             np.savetxt(f, data, delimiter=',')
 

@@ -22,6 +22,7 @@ plugin_blacklist:
 - camera
 - home_position
 - distance_sensor
+- param
 #- rangefinder
 
 #controller
