@@ -314,8 +314,10 @@ class indoorController:
             self.set_point_settling = msg.channels[5]
             self.throttle_in = (msg.channels[2] - 1000) / 10
             if self.set_point_settling < 1300:
-                self.ref_alt = 0.25
+                self.ref_alt = 0.1
             elif self.set_point_settling > 1300 and self.set_point_settling < 1700:
+                self.ref_alt = 0.2
+            elif self.set_point_settling > 1700:
                 self.ref_alt = 0.0
 
         #print('Throttle: ' + str(self.throttle) + '   ref_altitude: ' + str(self.ref_alt))
@@ -328,15 +330,6 @@ class indoorController:
         self.is_manual_input = msg.manual_input
         self.mode = msg.mode
         self.system_status = msg.system_status
-
-
-    def _imu_handler(self, msg):
-        qx = msg.orientation.x
-        qy = msg.orientation.y
-        qz = msg.orientation.z
-        qw = msg.orientation.w
-        self.phi, self.theta, self.psi = quaternion_to_euler_angle(qw, qx, qy, qz)
-
 
 
     def _estimator_handler(self, msg):
