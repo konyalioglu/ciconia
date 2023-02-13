@@ -63,10 +63,10 @@ class indoorController:
         self.initialize_model()
 
         #Controller Parameters
-        self.position_controller = pid(1.5, 0.0, 0.0)
-        self.velocity_controller = pid(15.0, 0.0, 0.0)
-        self.acceleration_controller = pid(0.8, 0.1, 0.01, output_constraints = [-90, 0], anti_windup = 80)
-        self.ref_alt = 0.3
+        self.position_controller = pid(1.0, 0.0, 0.0)
+        self.velocity_controller = pid(3.0, 0.0, 0.0)
+        self.acceleration_controller = pid(0.5, 0.8, 0.0)
+        self.ref_alt = 0.1
 
 
         self.A_alt = np.array([[0, 1],[0, 0]])
@@ -147,7 +147,7 @@ class indoorController:
     def initialize_model(self):
         self.controller_rate = self.get_param('/controller_rate', self.controller_rate)
         self.controller_type = self.get_param('/controller_type', self.controller_type)
-        rospy.sleep(5)
+        rospy.sleep(10)
         self.set_guided_nogps()
         self.arming()
 
@@ -194,8 +194,10 @@ class indoorController:
                 vz_signal = self.position_controller.calculate_control_input(-self.ref_alt + self.home_z, self.z, 1/self.controller_rate)
                 az_signal = self.velocity_controller.calculate_control_input(vz_signal, self.z_dot, 1/self.controller_rate)
                 throttle = self.acceleration_controller.calculate_control_input(az_signal, self.az, 1/self.controller_rate)
-                self.set_attitude.thrust = (-throttle + 34.6) / 100
+                self.set_attitude.thrust = (-throttle + 30.0) / 100
                 self._set_attitude_pub.publish(self.set_attitude)
+                print('Throttle: ' + str(throttle) + '    az_signal: ' + str(az_signal) + '   az: ' + str(self.az) + '   zdot: ' + str(self.z_dot) + '   z: ' + str(self.z - self.home_z))
+
 
             elif self.controller_type == 'MPC':
                 xk = np.array([[self.z],[self.z_dot]])
@@ -209,7 +211,7 @@ class indoorController:
 
                 print('Throttle: ' + str(throttle) + '    umpc_a: ' + str(u[0,0]) + '   az: ' + str(self.az) + '   zdot: ' + str(self.z_dot) + '   z: ' + str(self.z - self.home_z))
 
-                self.set_attitude.thrust = (throttle + 34.0) / 100
+                self.set_attitude.thrust = (throttle + 30.0) / 100
                 #self.set_attitude.thrust = (throttle) / 100
                 self._set_attitude_pub.publish(self.set_attitude)
 

@@ -8,7 +8,7 @@ import rospy
 
 from geometry_msgs.msg import Vector3Stamped
 from sensor_msgs.msg import Imu
-from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import Float64MultiArray, Float32
 from mavros_msgs.msg import RCOut, State, PositionTarget, AttitudeTarget, RCIn
 from mavros_msgs.srv import CommandBool, SetMode
 from ciconia_msgs.msg import altPIDControl, altMPCControl
@@ -51,11 +51,12 @@ class indoorController:
         self.set_attitude = AttitudeTarget()
         self.pid_data = altPIDControl()
         self.mpc_data = altMPCControl()
+        self.set_yaw  = Float32()
 
         self.set_point.coordinate_frame = self.set_point.FRAME_BODY_NED
         self.set_point.type_mask  = self.set_point.IGNORE_PX + self.set_point.IGNORE_PY + self.set_point.IGNORE_PZ 
         self.set_point.type_mask += self.set_point.IGNORE_VX + self.set_point.IGNORE_VY + self.set_point.IGNORE_VZ 
-        self.set_point.type_mask += self.set_point.IGNORE_YAW
+        self.set_point.type_mask += self.set_point.IGNORE_YAW_RATE
         self.set_point.yaw_rate = 0.0
 
         self.set_attitude.type_mask =  self.set_attitude.IGNORE_ROLL_RATE + self.set_attitude.IGNORE_PITCH_RATE + self.set_attitude.IGNORE_YAW_RATE + self.set_attitude.IGNORE_ATTITUDE
@@ -66,12 +67,6 @@ class indoorController:
         self.initialize_model()
 
         #Global Variables
-        self.g = 9.81
-
-        self.number_of_acc_samples = 100
-        self.acc_sample_counter = 0
-        self.sum_acc = 0
-        self.gravity_calibration = False
 
         self.phi = 0.0
         self.theta = 0.0
@@ -87,6 +82,10 @@ class indoorController:
 
         self.z = 0.0
         self.z_dot = 0.0
+        
+        self.u = 0.0
+        self.v = 0.0
+        self.w = 0.0
 
         self.init_home = False
         self.init_throttle = False
@@ -94,20 +93,20 @@ class indoorController:
 
         self.home_z = 0.0
 
-        self.pos_kp = 1.5
+        self.pos_kp = 1.0
         self.pos_ki = 0.0
         self.pos_kd = 0.0
 
-        self.vel_kp = 15.0
-        self.vel_ki = 0.002
+        self.vel_kp = 3.0
+        self.vel_ki = 0.0
         self.vel_kd = 0.0
 
-        self.acc_kp = 0.8
-        self.acc_ki = 0.1
-        self.acc_kd = 0.01
+        self.acc_kp = 0.5
+        self.acc_ki = 0.8
+        self.acc_kd = 0.0
 
         self.position_controller = pid(self.pos_kp, self.pos_ki, self.pos_kd)
-        self.velocity_controller = pid(self.vel_kp, self.vel_ki, self.vel_kd, anti_windup = 0.2)
+        self.velocity_controller = pid(self.vel_kp, self.vel_ki, self.vel_kd)
         self.acceleration_controller = pid(self.acc_kp, self.acc_ki, self.acc_kd, output_constraints = [-100, 100], anti_windup = 100)
 
         self.ref_alt = 0.25
@@ -189,7 +188,6 @@ class indoorController:
         self._set_pid_data_pub = rospy.Publisher('/pid/data', altPIDControl, queue_size=5)  
         self._set_mpc_data_pub = rospy.Publisher('/mpc/data', altMPCControl, queue_size=5)  
 
-
         self._timer = rospy.Timer(rospy.Duration(1/self.controller_rate), self._timer)   
 
 
@@ -238,6 +236,8 @@ class indoorController:
             self.init_throttle = True
             self.throttle_ref = self.throttle_in
             self.home_z = self.z
+            self.set_yaw = self.psi
+            self.set_point.yaw = self.set_yaw
 
         if self.is_armed and self.mode == 'GUIDED_NOGPS' and self.init_home and self.init_throttle:
 
@@ -267,7 +267,7 @@ class indoorController:
 
                 self._set_pid_data_pub.publish(self.pid_data)
                 #print('Throttle: ' + str(self.set_attitude.thrust) + '   az: ' + str(self.az) + '   zdot: ' + str(self.z_dot) + '   z: ' + str(self.z - self.home_z))
-                print(' az: ' + str(self.az))
+                #print(' az: ' + str(self.az))
 
             elif self.controller_type == 'MPC':
 
@@ -331,36 +331,18 @@ class indoorController:
 
 
     def _imu_handler(self, msg):
-        if self.acc_sample_counter + 1 != self.number_of_acc_samples and self.gravity_calibration == False:
-            self.acc_sample_counter += 1
-            self.sum_acc += np.sqrt(msg.linear_acceleration.x ** 2 + msg.linear_acceleration.y ** 2 + msg.linear_acceleration.z ** 2)
+        qx = msg.orientation.x
+        qy = msg.orientation.y
+        qz = msg.orientation.z
+        qw = msg.orientation.w
+        self.phi, self.theta, self.psi = quaternion_to_euler_angle(qw, qx, qy, qz)
 
-        elif self.acc_sample_counter + 1 == self.number_of_acc_samples and self.gravity_calibration == False:
-            self.g = self.sum_acc / self.number_of_acc_samples
-            self.acc_sample_counter += 1
-            self.gravity_calibration = True
-
-        else:
-            qx = msg.orientation.x
-            qy = msg.orientation.y
-            qz = msg.orientation.z
-            qw = msg.orientation.w
-            self.phi, self.theta, self.psi = quaternion_to_euler_angle(qw, qx, qy, qz)
-            gx, gy, gz = quaternion_to_gravity(qx, qy, qz, qw)
-
-            self.ax = -msg.linear_acceleration.x + gx * self.g
-            self.ay = -msg.linear_acceleration.y + gy * self.g
-            self.az = -msg.linear_acceleration.z + gz * self.g
-
-            self.p = msg.angular_velocity.x
-            self.q = msg.angular_velocity.y
-            self.r = msg.angular_velocity.z
 
 
     def _estimator_handler(self, msg):
         self.z = -msg.data[0]
         self.z_dot = -msg.data[1]
-        print('dzz: ' + str(-msg.data[2]) + '  dzz_unbiased: ' + str(-msg.data[2]+msg.data[4]))
+
 
 
 

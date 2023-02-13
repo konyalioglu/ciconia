@@ -175,7 +175,7 @@ class altEstimatorNode:
             gy =  self.g * np.cos(self.theta) * np.sin(self.phi)
             gz =  self.g * np.cos(self.theta) * np.cos(self.phi)
 
-            accel_vector = euler_inverse_transformation_y(self.theta, np.array([[-msg.linear_acceleration.x],[msg.linear_acceleration.y],[msg.linear_acceleration.z]]))
+            accel_vector = euler_inverse_transformation_y(self.y_trim_offset, np.array([[-msg.linear_acceleration.x],[msg.linear_acceleration.y],[msg.linear_acceleration.z]]))
 
             self.ax = accel_vector[0,0] - gx
             self.ay = accel_vector[1,0] - gy
@@ -190,7 +190,7 @@ class altEstimatorNode:
             self.q = -msg.angular_velocity.y
             self.r = -msg.angular_velocity.z
 
-            self.kf.ACC_Update(-self.az)
+            self.kf.ACC_Update(self.az)
 
             self.imu_data = msg
             self.imu_data.linear_acceleration.x = self.ax

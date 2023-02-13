@@ -3,7 +3,6 @@ plugin_blacklist:
 # actuator_control
 - ftp
 - safety_area
-- hil
 # extras
 # altitude
 - debug_value
@@ -13,7 +12,7 @@ plugin_blacklist:
 - vision_speed_estimate
 - wheel_odometry
 - waypoint
-- vision_speed_estimate
+- vision_pose_estimate
 - wheel_odometry
 - vfr_hud
 - trajectory
@@ -23,6 +22,10 @@ plugin_blacklist:
 - home_position
 - distance_sensor
 - param
+- tunnel
+- rallypoint
+- setpoint_trajectory
+- play_tune
 #- rangefinder
 
 #controller
