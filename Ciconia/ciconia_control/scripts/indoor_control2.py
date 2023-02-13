@@ -237,14 +237,14 @@ class indoorController:
             self.throttle_ref = self.throttle_in
             self.home_z = self.z
             self.set_yaw = self.psi
-            self.set_point.yaw = self.set_yaw
+
 
         if self.is_armed and self.mode == 'GUIDED_NOGPS' and self.init_home and self.init_throttle:
 
             if self.controller_type == 'PID':
 
                 vz_signal = self.position_controller.calculate_control_input(-self.ref_alt + self.home_z, self.z, 1/self.controller_rate)
-                az_signal = self.velocity_controller.calculate_control_input(vz_signal, self.z_dot, 1/self.controller_rate)
+                az_signal = self.velocity_controller.calculate_control_input(vz_signal, self.w, 1/self.controller_rate)
                 throttle = self.acceleration_controller.calculate_control_input(az_signal, self.az, 1/self.controller_rate)
 
                 self.set_attitude.thrust = (-throttle + self.throttle_ref) / 100
@@ -257,7 +257,7 @@ class indoorController:
                 self.pid_data.home_altitude = self.home_z
 
                 self.pid_data.velocity_signal = vz_signal
-                self.pid_data.velocity = self.z_dot
+                self.pid_data.velocity = self.w
 
                 self.pid_data.acceleration_signal = az_signal
                 self.pid_data.acceleration = self.az
@@ -266,12 +266,12 @@ class indoorController:
                 self.pid_data.reference_throttle = self.throttle_ref
 
                 self._set_pid_data_pub.publish(self.pid_data)
-                #print('Throttle: ' + str(self.set_attitude.thrust) + '   az: ' + str(self.az) + '   zdot: ' + str(self.z_dot) + '   z: ' + str(self.z - self.home_z))
+                #print('Throttle: ' + str(self.set_attitude.thrust) + '   az: ' + str(self.az) + '   zdot: ' + str(self.w) + '   z: ' + str(self.z - self.home_z))
                 #print(' az: ' + str(self.az))
 
             elif self.controller_type == 'MPC':
 
-                xk = np.array([[self.z],[self.z_dot]])
+                xk = np.array([[self.z],[self.w]])
                 ref_s_vector = np.array([[-self.ref_alt + self.home_z],[0]])
 
                 #u = self.mpc_alt.calculate_mpc_unconstraint_input(xk - ref_s_vector)
@@ -292,7 +292,7 @@ class indoorController:
                 self.mpc_data.throttle = (throttle + self.throttle_ref) / 100
                 self.mpc_data.reference_throttle = self.throttle_ref
                 print(' az: ' + str(self.az))
-                #print('Throttle: ' + str(self.set_attitude.thrust) + '   az: ' + str(self.az) + '   zdot: ' + str(self.z_dot) + '   z: ' + str(self.z - self.home_z))
+                #print('Throttle: ' + str(self.set_attitude.thrust) + '   az: ' + str(self.az) + '   zdot: ' + str(self.w) + '   z: ' + str(self.z - self.home_z))
 
 
 
@@ -341,7 +341,8 @@ class indoorController:
 
     def _estimator_handler(self, msg):
         self.z = -msg.data[0]
-        self.z_dot = -msg.data[1]
+        self.w = -msg.data[1]
+        self.az = -msg.data[2]
 
 
 
