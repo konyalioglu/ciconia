@@ -177,8 +177,7 @@ class indoorController:
 
         rospy.Subscriber('/mavros/rc/out', RCOut, self._rc_out_handler)
         rospy.Subscriber('/mavros/rc/in', RCIn, self._rc_in_handler)
-        rospy.Subscriber('/mavros/state', State, self._mavros_states_handler)        
-        rospy.Subscriber('/mavros/imu/data', Imu, self._imu_handler)  
+        rospy.Subscriber('/mavros/state', State, self._mavros_states_handler) 
         rospy.Subscriber('/alt_est/states', Float64MultiArray, self._estimator_handler)   
         rospy.Subscriber('/mavros/setpoint_raw/target_local', PositionTarget, self._set_point_callback)     
 
