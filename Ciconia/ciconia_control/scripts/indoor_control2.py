@@ -6,7 +6,7 @@ import numpy as np
 from numpy import nan
 import rospy
 
-from geometry_msgs.msg import Vector3Stamped
+from geometry_msgs.msg import Vector3Stamped, Quaternion
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float64MultiArray, Float32
 from mavros_msgs.msg import RCOut, State, PositionTarget, AttitudeTarget, RCIn
@@ -16,6 +16,7 @@ from ciconia_msgs.msg import altPIDControl, altMPCControl
 from utils import *
 from pid import pid
 from model_predictive_controller import Model_Predictive_Control
+from quaternion import *
 
 
 
@@ -52,6 +53,7 @@ class indoorController:
         self.pid_data = altPIDControl()
         self.mpc_data = altMPCControl()
         self.set_yaw  = Float32()
+        self.set_quaternion = Quaternion()
 
         self.set_point.coordinate_frame = self.set_point.FRAME_BODY_NED
         self.set_point.type_mask  = self.set_point.IGNORE_PX + self.set_point.IGNORE_PY + self.set_point.IGNORE_PZ 
@@ -59,7 +61,7 @@ class indoorController:
         self.set_point.type_mask += self.set_point.IGNORE_YAW_RATE
         self.set_point.yaw_rate = 0.0
 
-        self.set_attitude.type_mask =  self.set_attitude.IGNORE_ROLL_RATE + self.set_attitude.IGNORE_PITCH_RATE + self.set_attitude.IGNORE_YAW_RATE + self.set_attitude.IGNORE_ATTITUDE
+        self.set_attitude.type_mask =  self.set_attitude.IGNORE_ROLL_RATE + self.set_attitude.IGNORE_PITCH_RATE + self.set_attitude.IGNORE_YAW_RATE
 
         ##Ros 
         self._namespace = rospy.get_namespace()
@@ -71,6 +73,11 @@ class indoorController:
         self.phi = 0.0
         self.theta = 0.0
         self.psi = 0.0
+
+        self.qw = 0.0
+        self.qx = 0.0
+        self.qy = 0.0
+        self.qz = 0.0
 
         self.ax = 0.0
         self.ay = 0.0
@@ -109,7 +116,7 @@ class indoorController:
         self.velocity_controller = pid(self.vel_kp, self.vel_ki, self.vel_kd)
         self.acceleration_controller = pid(self.acc_kp, self.acc_ki, self.acc_kd, output_constraints = [-100, 100], anti_windup = 100)
 
-        self.ref_alt = 0.25
+        self.ref_alt = 0.1
 
         self.pid_data.alt_to_vel_p = self.pos_kp
         self.pid_data.alt_to_vel_i = self.pos_ki
@@ -177,7 +184,8 @@ class indoorController:
 
         rospy.Subscriber('/mavros/rc/out', RCOut, self._rc_out_handler)
         rospy.Subscriber('/mavros/rc/in', RCIn, self._rc_in_handler)
-        rospy.Subscriber('/mavros/state', State, self._mavros_states_handler) 
+        rospy.Subscriber('/mavros/state', State, self._mavros_states_handler)        
+        rospy.Subscriber('/mavros/imu/data', Imu, self._imu_handler)  
         rospy.Subscriber('/alt_est/states', Float64MultiArray, self._estimator_handler)   
         rospy.Subscriber('/mavros/setpoint_raw/target_local', PositionTarget, self._set_point_callback)     
 
@@ -231,11 +239,27 @@ class indoorController:
     def _timer(self, event):
 
         if self.is_armed and self.mode == 'GUIDED_NOGPS' and self.init_home == False and self.init_throttle == False:
+            q1 = Quaternion(self.qw, self.qx, self.qy, self.qz).normalize()
+            q2 = Quaternion().euler_to_quaternion(-self.phi, -self.theta, 0)
+            q  = Quaternion(*(Quaternion(*q1).multiplication(Quaternion(*q2))))
+
+            self.set_quaternion.w = q.qw
+            self.set_quaternion.x = q.qx
+            self.set_quaternion.y = q.qy
+            self.set_quaternion.z = q.qz
+
+            self.set_attitude.orientation = self.set_quaternion
+
+            print('home quaternion: ' + str(q) + '\n')
+            print('phi: ' + str(self.phi) + 'theta: ' + str(self.theta) + 'psi: ' + str(self.psi) + '\n')
+            print('rotated quaternion: ' + str(Quaternion(*q1).multiplication(Quaternion(*q2))) + '\n')
+
             self.init_home = True
             self.init_throttle = True
-            self.throttle_ref = self.throttle_in
+            self.throttle_ref = 58.0
             self.home_z = self.z
             self.set_yaw = self.psi
+
 
 
         if self.is_armed and self.mode == 'GUIDED_NOGPS' and self.init_home and self.init_throttle:
@@ -247,7 +271,6 @@ class indoorController:
                 throttle = self.acceleration_controller.calculate_control_input(az_signal, self.az, 1/self.controller_rate)
 
                 self.set_attitude.thrust = (-throttle + self.throttle_ref) / 100
-                #self.set_attitude.thrust = 0.15
 
                 self._set_attitude_pub.publish(self.set_attitude)
 
@@ -265,15 +288,12 @@ class indoorController:
                 self.pid_data.reference_throttle = self.throttle_ref
 
                 self._set_pid_data_pub.publish(self.pid_data)
-                #print('Throttle: ' + str(self.set_attitude.thrust) + '   az: ' + str(self.az) + '   zdot: ' + str(self.w) + '   z: ' + str(self.z - self.home_z))
-                #print(' az: ' + str(self.az))
+
 
             elif self.controller_type == 'MPC':
 
                 xk = np.array([[self.z],[self.w]])
                 ref_s_vector = np.array([[-self.ref_alt + self.home_z],[0]])
-
-                #u = self.mpc_alt.calculate_mpc_unconstraint_input(xk - ref_s_vector)
 
                 u = self.mpc_alt.calculate_control_input(xk - ref_s_vector, option = 'Hildreth')
                 throttle = self.inner_acc_controller.calculate_control_input(-u[0,0], self.az, 1/self.controller_rate)
@@ -291,9 +311,6 @@ class indoorController:
                 self.mpc_data.throttle = (throttle + self.throttle_ref) / 100
                 self.mpc_data.reference_throttle = self.throttle_ref
                 print(' az: ' + str(self.az))
-                #print('Throttle: ' + str(self.set_attitude.thrust) + '   az: ' + str(self.az) + '   zdot: ' + str(self.w) + '   z: ' + str(self.z - self.home_z))
-
-
 
 
     def _rc_out_handler(self, msg):
@@ -315,11 +332,17 @@ class indoorController:
             if self.set_point_settling < 1300:
                 self.ref_alt = 0.1
             elif self.set_point_settling > 1300 and self.set_point_settling < 1700:
-                self.ref_alt = 0.2
+                self.ref_alt = 0.0
             elif self.set_point_settling > 1700:
                 self.ref_alt = 0.0
 
-        #print('Throttle: ' + str(self.throttle) + '   ref_altitude: ' + str(self.ref_alt))
+
+    def _imu_handler(self, msg):
+            self.qx =  msg.orientation.x
+            self.qy =  msg.orientation.y
+            self.qz =  msg.orientation.z
+            self.qw =  msg.orientation.w
+            self.phi, self.theta, self.psi = quaternion_to_euler_angle(qw, qx, qy, qz)
 
 
     def _mavros_states_handler(self, msg):
