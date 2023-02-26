@@ -21,15 +21,6 @@ class LogNode():
         self.time_ref = time.time()
 
         #Initialization
-        rospy.init_node(self._node_name)
-
-        rospy.Subscriber('/pid/data', altPIDControl, self._pid_data_handler) 
-        rospy.Subscriber('/mpc/data', altMPCControl, self._mpc_data_handler)   
-        rospy.Subscriber('/alt_est/states', Float64MultiArray, self._altitude_estimator_data_handler)
-        rospy.Subscriber('/barometer', Float64, self._barometer_data_handler)     
-        rospy.Subscriber('/rangefinder', Float64, self._rangefinder_data_handler)     
-        rospy.Subscriber('/imu', Imu, self._imu_data_handler)     
-
 
         current_dir = os.getcwd()
 
@@ -48,6 +39,16 @@ class LogNode():
         np.savetxt(self.rangefinder_data_dir, np.array([[0.0,0.0]]), delimiter=',')
         np.savetxt(self.barometer_data_dir, np.array([[0.0,0.0]]), delimiter=',')
         np.savetxt(self.imu_data_dir, np.array([[0.0,0.0,0.0,0.0]]), delimiter=',')
+
+
+        rospy.init_node(self._node_name)
+
+        rospy.Subscriber('/pid/data', altPIDControl, self._pid_data_handler) 
+        rospy.Subscriber('/mpc/data', altMPCControl, self._mpc_data_handler)   
+        rospy.Subscriber('/alt_est/states', Float64MultiArray, self._altitude_estimator_data_handler)
+        rospy.Subscriber('/barometer', Float64, self._barometer_data_handler)     
+        rospy.Subscriber('/rangefinder', Float64, self._rangefinder_data_handler)     
+        rospy.Subscriber('/imu', Imu, self._imu_data_handler)   
 
 
     def _altitude_estimator_data_handler(self, msg):

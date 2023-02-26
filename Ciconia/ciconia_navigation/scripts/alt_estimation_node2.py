@@ -152,8 +152,7 @@ class altEstimatorNode:
                 self.acc_sample_counter += 1
                 self.sum_acc += np.sqrt(msg.linear_acceleration.x ** 2 + msg.linear_acceleration.y ** 2 + msg.linear_acceleration.z ** 2)
                 g = np.sqrt(msg.linear_acceleration.x ** 2 + msg.linear_acceleration.y ** 2 + msg.linear_acceleration.z ** 2)
-                print('g: ' + str(g) + ' ax: ' +  str(msg.linear_acceleration.x)+' ay: ' + str(msg.linear_acceleration.y) + ' az: '+str(msg.linear_acceleration.z))
-
+                
 
         elif self.acc_sample_counter  == self.number_of_acc_samples and self.gravity_calibration == False:
             self.g = self.sum_acc / (self.number_of_acc_samples)
@@ -166,7 +165,6 @@ class altEstimatorNode:
             qz =  msg.orientation.z
             qw =  msg.orientation.w
             self.phi, self.theta, self.psi = quaternion_to_euler_angle(qw, qx, qy, qz)
-            #gx, gy, gz = quaternion_to_gravity(qx, qy, qz, qw)
 
             self.theta = -self.theta
             self.psi   = -self.psi
@@ -181,10 +179,6 @@ class altEstimatorNode:
             self.ay = accel_vector[1,0] - gy
             self.az = accel_vector[2,0] - gz
 
-            #print('g: ' + str(self.g) + '  gc: ' + str(np.sqrt(msg.linear_acceleration.x ** 2 + msg.linear_acceleration.y ** 2 + msg.linear_acceleration.z ** 2)))
-            #print(' phi: ' + str(self.phi) + ' theta: ' + str(self.theta) + ' psi: ' + str(self.psi))
-            print('gx: ' + str(gx) + ' gy: ' + str(gy) + ' gz: '+str(gz))
-            print('ax: ' +  str(msg.linear_acceleration.x)+' ay: ' + str(msg.linear_acceleration.y) + ' az: '+str(msg.linear_acceleration.z))
 
             self.p =  msg.angular_velocity.x
             self.q = -msg.angular_velocity.y

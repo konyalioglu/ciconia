@@ -342,7 +342,7 @@ class indoorController:
             self.qy =  msg.orientation.y
             self.qz =  msg.orientation.z
             self.qw =  msg.orientation.w
-            self.phi, self.theta, self.psi = quaternion_to_euler_angle(qw, qx, qy, qz)
+            self.phi, self.theta, self.psi = quaternion_to_euler_angle(self.qw, self.qx, self.qy, self.qz)
 
 
     def _mavros_states_handler(self, msg):
