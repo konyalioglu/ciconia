@@ -28,5 +28,6 @@
 
     <rosparam command="load" file="$(find ciconia_indoor_test_launch)/config/alt_controller_config.yaml"/>
     <node name="alt_controller" pkg="ciconia_control" type="indoor_control_sitl.py" output="screen"/>  
+    
 	
 </launch>

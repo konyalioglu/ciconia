@@ -25,7 +25,7 @@ class LogNode():
         current_dir = os.getcwd()
 
         self.dir = '/home/turan/ciconia/src/ciconia_logging/log'
-        self.dir = '/ciconia_ws/src/Ciconia/ciconia_logging/log'
+        self.dir = '/ciconia/src/Ciconia/ciconia_logging/log'
         self.alt_est_dir = self.dir + '/alt_est_data.csv'
         self.pid_data_dir = self.dir + '/pid_data.csv'
         self.mpc_data_dir = self.dir + '/mpc_data.csv'

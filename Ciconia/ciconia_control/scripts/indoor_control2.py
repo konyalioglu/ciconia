@@ -6,7 +6,7 @@ import numpy as np
 from numpy import nan
 import rospy
 
-from geometry_msgs.msg import Vector3Stamped, Quaternion
+from geometry_msgs.msg import Vector3, Vector3Stamped, Quaternion
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float64MultiArray, Float32
 from mavros_msgs.msg import RCOut, State, PositionTarget, AttitudeTarget, RCIn
@@ -54,6 +54,7 @@ class indoorController:
         self.mpc_data = altMPCControl()
         self.set_yaw  = Float32()
         self.set_quaternion = Quaternion()
+        self.set_rates = Vector3()
 
         self.set_point.coordinate_frame = self.set_point.FRAME_BODY_NED
         self.set_point.type_mask  = self.set_point.IGNORE_PX + self.set_point.IGNORE_PY + self.set_point.IGNORE_PZ 
@@ -61,7 +62,7 @@ class indoorController:
         self.set_point.type_mask += self.set_point.IGNORE_YAW_RATE
         self.set_point.yaw_rate = 0.0
 
-        self.set_attitude.type_mask =  self.set_attitude.IGNORE_ROLL_RATE + self.set_attitude.IGNORE_PITCH_RATE + self.set_attitude.IGNORE_YAW_RATE
+        self.set_attitude.type_mask =  self.set_attitude.IGNORE_ATTITUDE
 
         ##Ros 
         self._namespace = rospy.get_namespace()
@@ -104,7 +105,7 @@ class indoorController:
         self.pos_ki = 0.0
         self.pos_kd = 0.0
 
-        self.vel_kp = 3.0
+        self.vel_kp = 5.0
         self.vel_ki = 0.0
         self.vel_kd = 0.0
 
@@ -112,9 +113,25 @@ class indoorController:
         self.acc_ki = 0.8
         self.acc_kd = 0.0
 
+        self.phi_kp = 4.5
+        self.phi_ki = 0.0
+        self.phi_kd = 0.0
+
+        self.theta_kp = 4.5
+        self.theta_ki = 0.0
+        self.theta_kd = 0.0
+
+        self.psi_kp = 4.5
+        self.psi_ki = 0.0
+        self.psi_kd = 0.0
+
         self.position_controller = pid(self.pos_kp, self.pos_ki, self.pos_kd)
         self.velocity_controller = pid(self.vel_kp, self.vel_ki, self.vel_kd)
-        self.acceleration_controller = pid(self.acc_kp, self.acc_ki, self.acc_kd, output_constraints = [-100, 100], anti_windup = 100)
+        self.acceleration_controller = pid(self.acc_kp, self.acc_ki, self.acc_kd, output_constraints = [-30, 30], anti_windup = 30)
+
+        self.phi_controller = pid(self.pos_kp, self.pos_ki, self.pos_kd)
+        self.theta_controller = pid(self.theta_kp, self.theta_ki, self.theta_kd)
+        self.psi_controller = pid(self.psi_kp, self.psi_ki, self.psi_kd)
 
         self.ref_alt = 0.1
 
@@ -245,8 +262,8 @@ class indoorController:
 
             self.set_quaternion.w = q.qw
             self.set_quaternion.x = q.qx
-            self.set_quaternion.y = q.qy
-            self.set_quaternion.z = q.qz
+            self.set_quaternion.y = -q.qy
+            self.set_quaternion.z = -q.qz
 
             self.set_attitude.orientation = self.set_quaternion
 
@@ -270,7 +287,12 @@ class indoorController:
                 az_signal = self.velocity_controller.calculate_control_input(vz_signal, self.w, 1/self.controller_rate)
                 throttle = self.acceleration_controller.calculate_control_input(az_signal, self.az, 1/self.controller_rate)
 
+                self.set_rates.x = self.phi_controller.calculate_control_input(0, self.phi, 1/self.controller_rate)
+                self.set_rates.y = -self.theta_controller.calculate_control_input(0, self.theta, 1/self.controller_rate)
+                self.set_rates.z = -self.psi_controller.calculate_control_input(self.set_yaw, self.psi, 1/self.controller_rate)                
+
                 self.set_attitude.thrust = (-throttle + self.throttle_ref) / 100
+                self.set_attitude.body_rate = self.set_rates
 
                 self._set_attitude_pub.publish(self.set_attitude)
 
@@ -330,7 +352,7 @@ class indoorController:
             self.set_point_settling = msg.channels[5]
             self.throttle_in = (msg.channels[2] - 1000) / 10
             if self.set_point_settling < 1300:
-                self.ref_alt = 0.1
+                self.ref_alt = 0.10
             elif self.set_point_settling > 1300 and self.set_point_settling < 1700:
                 self.ref_alt = 0.0
             elif self.set_point_settling > 1700:
@@ -338,10 +360,11 @@ class indoorController:
 
 
     def _imu_handler(self, msg):
-            self.qx =  msg.orientation.x
-            self.qy =  msg.orientation.y
-            self.qz =  msg.orientation.z
-            self.qw =  msg.orientation.w
+            self.qw =   msg.orientation.w
+            self.qx =   msg.orientation.x
+            self.qy =  -msg.orientation.y
+            self.qz =  -msg.orientation.z
+
             self.phi, self.theta, self.psi = quaternion_to_euler_angle(self.qw, self.qx, self.qy, self.qz)
 
 
@@ -361,7 +384,6 @@ class indoorController:
 
 
 
-
 if __name__ == '__main__':
 
     inCont = indoorController()
@@ -369,6 +391,5 @@ if __name__ == '__main__':
     rospy.loginfo('ALTITUDE CONTROLLER HAS BEEN ACTIVATED')
     
     rospy.spin()
-
 
 
